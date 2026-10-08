@@ -1,0 +1,93 @@
+/*
+ * MUTARIS design tokens.
+ *
+ * The brand name and visual identity are provisional — every color,
+ * radius, shadow and type size used across the app should come from
+ * here so the look can be swapped later without touching components.
+ */
+
+@theme {
+  /* ---- Surfaces (warm charcoal, not neutral gray/black) ---- */
+  --color-ink: #0e100d;
+  --color-ink-2: #171a15;
+  --color-ink-3: #21251d;
+
+  /* ---- Foreground (warm off-white, not pure white) ---- */
+  --color-paper: #f4f5ef;
+  --color-paper-dim: #a8ac9f;
+  --color-paper-faint: #6f746a;
+
+  /* ---- Accent: a single, deliberately restrained lime ---- */
+  --color-lime: #c9f24d;
+  --color-lime-dim: #a7cf3f;
+  --color-lime-ink: #0e1509;
+
+  /* ---- Hairlines, derived from the foreground colour ---- */
+  --color-line: color-mix(in srgb, var(--color-paper) 10%, transparent);
+  --color-line-strong: color-mix(in srgb, var(--color-paper) 20%, transparent);
+  --color-field: color-mix(in srgb, var(--color-paper) 6%, transparent);
+
+  /* ---- Semantic (shadcn-style) mappings ---- */
+  --color-background: var(--color-ink);
+  --color-foreground: var(--color-paper);
+  --color-card: var(--color-ink-2);
+  --color-card-foreground: var(--color-paper);
+  --color-popover: var(--color-ink-2);
+  --color-popover-foreground: var(--color-paper);
+  --color-primary: var(--color-lime);
+  --color-primary-foreground: var(--color-lime-ink);
+  --color-secondary: var(--color-ink-3);
+  --color-secondary-foreground: var(--color-paper);
+  --color-muted: var(--color-ink-2);
+  --color-muted-foreground: var(--color-paper-dim);
+  --color-accent: var(--color-ink-3);
+  --color-accent-foreground: var(--color-paper);
+  --color-border: var(--color-line);
+  --color-input: var(--color-field);
+  --color-ring: var(--color-lime);
+
+  /* ---- Type families ---- */
+  --font-sans:
+    "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-accent: "Doto Variable", ui-monospace, "SFMono-Regular", monospace;
+
+  /* ---- Fluid type scale ---- */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.1875rem;
+  --text-xl: clamp(1.25rem, 1.16rem + 0.4vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.32rem + 0.8vw, 1.875rem);
+  --text-3xl: clamp(1.75rem, 1.42rem + 1.4vw, 2.375rem);
+  --text-4xl: clamp(2.125rem, 1.6rem + 2.2vw, 3.125rem);
+  --text-5xl: clamp(2.625rem, 1.8rem + 3.6vw, 4.25rem);
+  --text-6xl: clamp(3rem, 1.9rem + 5vw, 5.5rem);
+  --text-hero: clamp(2.5rem, 1.5rem + 4.5vw, 5.75rem);
+
+  /* ---- Radii: generous, per brief ---- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-full: 999px;
+
+  /* ---- Shadow: one soft, low elevation only ---- */
+  --shadow-soft: 0 24px 64px -24px rgb(0 0 0 / 0.55);
+}
+
+@font-face {
+  font-family: "Instrument Sans Variable";
+  src: url("../fonts/instrument-sans-latin-wght.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Doto Variable";
+  src: url("../fonts/doto-latin-wght.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,0 +1,26 @@
+{
+  "name": "mutaris",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MUTARIS — solution-first security e-commerce (monorepo)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @workspace/web",
+    "build": "npm run build -w @workspace/web",
+    "start": "npm run start -w @workspace/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.8",
+    "typescript": "~6.0.3"
+  }
+}
