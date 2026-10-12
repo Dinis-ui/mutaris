@@ -101,7 +101,7 @@ export const platformStatus: PlatformStatusItem[] = [
   {
     id: "base-de-dados",
     label: "Base de dados",
-    description: "Ainda não existe ligação a PostgreSQL — dados em memória/mock.",
+    description: "Estado da ligação ao PostgreSQL.",
     tone: "neutral",
   },
 ];

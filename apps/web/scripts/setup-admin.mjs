@@ -1,21 +1,27 @@
 #!/usr/bin/env node
 /**
- * Cria ou atualiza uma conta de administrador do backoffice em
- * apps/web/.env.local (BACKOFFICE_ADMINS) e garante que existe um
- * BACKOFFICE_SESSION_SECRET. A password nunca é guardada em texto — só o
- * hash scrypt (mesmo formato que lib/backoffice-admins.ts).
+ * Cria ou atualiza uma conta de administrador do backoffice na base de
+ * dados (tabela `admins`). A password nunca é guardada em texto — só o hash
+ * scrypt (mesmo formato que lib/backoffice-admins.ts).
  *
  * Uso (a partir da raiz do projeto):
- *   node apps/web/scripts/setup-admin.mjs
+ *   npm run admin:setup -w @workspace/web
+ *
+ * Importar as contas antigas de BACKOFFICE_ADMINS (.env.local), sem pedir
+ * passwords (os hashes mantêm-se):
+ *   npm run admin:setup -w @workspace/web -- --from-env
  */
 import { randomBytes, scrypt } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import readline from "node:readline";
+import postgres from "postgres";
 
-const envPath = join(dirname(fileURLToPath(import.meta.url)), "..", ".env.local");
 const MIN_PASSWORD_LENGTH = 12;
+const url = process.env.DATABASE_URL;
+if (!url) {
+  console.error("DATABASE_URL não está definido em apps/web/.env.local.");
+  process.exit(1);
+}
+const sql = postgres(url, { prepare: false, max: 1 });
 
 function ask(question, { hidden = false } = {}) {
   return new Promise((resolve) => {
@@ -44,61 +50,62 @@ function hashPassword(password) {
   });
 }
 
-function readEnv() {
-  const lines = existsSync(envPath) ? readFileSync(envPath, "utf8").split(/\r?\n/) : [];
-  const entries = new Map();
-  const others = [];
-  for (const line of lines) {
-    const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (match && (match[1] === "BACKOFFICE_ADMINS" || match[1] === "BACKOFFICE_SESSION_SECRET")) {
-      entries.set(match[1], match[2]);
-    } else if (line.trim() !== "") {
-      others.push(line);
-    }
-  }
-  return { entries, others };
+async function upsertAdmin({ email, name, passwordHash }) {
+  await sql`
+    insert into admins (email, name, password_hash)
+    values (${email}, ${name}, ${passwordHash})
+    on conflict (email) do update
+      set name = excluded.name,
+          password_hash = excluded.password_hash,
+          disabled_at = null
+  `;
 }
 
-const email = (await ask("Email do administrador: ")).trim().toLowerCase();
-const name = (await ask("Nome (como aparece no backoffice): ")).trim();
-if (!email.includes("@") || !name) {
-  console.error("Email ou nome inválido.");
-  process.exit(1);
-}
-
-const password = await ask(`Password (mínimo ${MIN_PASSWORD_LENGTH} caracteres): `, { hidden: true });
-const confirmation = await ask("Repete a password: ", { hidden: true });
-if (password.length < MIN_PASSWORD_LENGTH) {
-  console.error(`A password tem de ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
-  process.exit(1);
-}
-if (password !== confirmation) {
-  console.error("As passwords não coincidem.");
-  process.exit(1);
-}
-
-const { entries, others } = readEnv();
-
-let admins = [];
 try {
-  const raw = entries.get("BACKOFFICE_ADMINS");
-  if (raw) admins = JSON.parse(raw.replace(/^'|'$/g, ""));
-} catch {
-  admins = [];
+  if (process.argv.includes("--from-env")) {
+    let accounts = [];
+    try {
+      accounts = JSON.parse((process.env.BACKOFFICE_ADMINS ?? "[]").replace(/^'|'$/g, ""));
+    } catch {
+      accounts = [];
+    }
+    const valid = accounts.filter(
+      (a) => typeof a?.email === "string" && typeof a?.name === "string" && typeof a?.passwordHash === "string",
+    );
+    if (valid.length === 0) {
+      console.error("Não encontrei contas em BACKOFFICE_ADMINS.");
+      process.exit(1);
+    }
+    for (const a of valid) {
+      await upsertAdmin({ email: a.email.trim().toLowerCase(), name: a.name, passwordHash: a.passwordHash });
+      console.log(`Importado: ${a.email}`);
+    }
+    console.log("\nFeito. Já podes remover BACKOFFICE_ADMINS e BACKOFFICE_SESSION_SECRET do .env.local.");
+  } else {
+    const email = (await ask("Email do administrador: ")).trim().toLowerCase();
+    const name = (await ask("Nome (como aparece no backoffice): ")).trim();
+    if (!email.includes("@") || !name) {
+      console.error("Email ou nome inválido.");
+      process.exit(1);
+    }
+
+    const password = await ask(`Password (mínimo ${MIN_PASSWORD_LENGTH} caracteres): `, { hidden: true });
+    const confirmation = await ask("Repete a password: ", { hidden: true });
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      console.error(`A password tem de ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      process.exit(1);
+    }
+    if (password !== confirmation) {
+      console.error("As passwords não coincidem.");
+      process.exit(1);
+    }
+
+    await upsertAdmin({ email, name, passwordHash: await hashPassword(password) });
+    console.log(`\nConta guardada para ${email}.`);
+  }
+} catch (error) {
+  console.error("Falhou:", error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+} finally {
+  await sql.end();
 }
-admins = admins.filter((admin) => admin.email?.toLowerCase() !== email);
-admins.push({ email, name, passwordHash: await hashPassword(password) });
-
-const secretCurrent = entries.get("BACKOFFICE_SESSION_SECRET");
-const secret = secretCurrent && secretCurrent.length >= 32 ? secretCurrent : randomBytes(32).toString("hex");
-
-const content = [
-  ...others,
-  `BACKOFFICE_SESSION_SECRET=${secret}`,
-  `BACKOFFICE_ADMINS='${JSON.stringify(admins)}'`,
-  "",
-].join("\n");
-
-writeFileSync(envPath, content, "utf8");
-console.log(`\nConta guardada para ${email} em ${envPath}`);
-console.log("Reinicia o servidor de desenvolvimento (Ctrl+C e npm run dev) para aplicar.");

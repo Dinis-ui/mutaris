@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: "Suporte",
 };
 
-export default function BackofficeSupportPage() {
-  const tickets = getSupportTickets();
+export default async function BackofficeSupportPage() {
+  const tickets = await getSupportTickets();
 
   return (
     <>

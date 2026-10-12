@@ -7,17 +7,17 @@ import { ProductSearch } from "@/components/store/product-search";
 import { ProductFilters } from "@/components/store/product-filters";
 import { ProductSort } from "@/components/store/product-sort";
 import { ProductGrid } from "@/components/store/product-grid";
-import { getProductCategories, getProducts, sortProducts } from "@/lib/products";
-import type { ProductSortOption } from "@workspace/types";
+import { filterProducts, getProductCategories, sortProducts } from "@/lib/products";
+import type { Product, ProductSortOption } from "@workspace/types";
 
 const categories = getProductCategories();
 
 // Uso honesto de "loading": só faz debounce da pesquisa, para não
-// filtrar a cada tecla. getProducts/sortProducts já estão escritas para
-// poderem vir a ser assíncronas sem este componente mudar de forma.
+// filtrar a cada tecla. Os produtos chegam já lidos da base de dados (por
+// props, a partir da página); a pesquisa e a ordenação acontecem no cliente.
 const SEARCH_DEBOUNCE_MS = 200;
 
-export function StoreExplorer() {
+export function StoreExplorer({ products }: { products: Product[] }) {
   const [query, setQuery] = React.useState("");
   const [debouncedQuery, setDebouncedQuery] = React.useState("");
   const [categorySlug, setCategorySlug] = React.useState<string | null>(null);
@@ -32,7 +32,7 @@ export function StoreExplorer() {
   // janela entre escrever e o debounce acima atualizar.
   const loading = query !== debouncedQuery;
 
-  const results = sortProducts(getProducts({ query: debouncedQuery, categorySlug }), sort);
+  const results = sortProducts(filterProducts(products, { query: debouncedQuery, categorySlug }), sort);
 
   return (
     <Section>

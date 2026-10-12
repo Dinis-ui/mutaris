@@ -16,8 +16,8 @@ const labelByTone: Record<PlatformStatusTone, string> = {
   neutral: "Sem dados reais",
 };
 
-export function BackofficePlatformStatus() {
-  const status = getPlatformStatus();
+export async function BackofficePlatformStatus() {
+  const status = await getPlatformStatus();
 
   return (
     <Card>

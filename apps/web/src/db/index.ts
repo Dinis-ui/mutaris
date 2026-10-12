@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@/db/schema";
 
@@ -7,7 +7,7 @@ import * as schema from "@/db/schema";
  * à primeira utilização — assim, páginas que não usam a base de dados não
  * falham se `DATABASE_URL` não estiver definido.
  */
-type Db = ReturnType<typeof drizzle<typeof schema>>;
+type Db = PostgresJsDatabase<typeof schema>;
 
 const globalForDb = globalThis as unknown as { __mutarisDb?: Db };
 

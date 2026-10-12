@@ -9,7 +9,8 @@ import { SectionHeading } from "@workspace/ui/components/section-heading";
 import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { ProductCard } from "@/components/store/product-card";
 import { formatPrice } from "@/lib/format";
-import { getProductBySlug, getProductCategoryBySlug, getProducts } from "@/lib/products";
+import { getProductCategoryBySlug } from "@/lib/products";
+import { getProductBySlug, getProducts } from "@/lib/products-server";
 import type { ProductAvailability } from "@workspace/types";
 
 const AVAILABILITY_LABEL: Record<ProductAvailability, string> = {
@@ -24,24 +25,27 @@ const AVAILABILITY_DOT: Record<ProductAvailability, string> = {
   brevemente: "bg-paper-faint",
 };
 
+// O catálogo vem da base de dados; a página é regenerada no máximo de 60 em 60 segundos.
+export const revalidate = 60;
+
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return {};
   return { title: product.name, description: product.description };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
   const category = getProductCategoryBySlug(product.category);
-  const relatedProducts = getProducts({ categorySlug: product.category }).filter(
+  const relatedProducts = (await getProducts({ categorySlug: product.category })).filter(
     (item) => item.id !== product.id,
   );
 

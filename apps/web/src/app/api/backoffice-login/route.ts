@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
-import {
-  BACKOFFICE_SESSION_COOKIE,
-  BACKOFFICE_SESSION_MAX_AGE,
-  createSessionToken,
-  isSessionConfigured,
-} from "@/lib/backoffice-auth";
-import { authenticateAdmin, hasConfiguredAdmins } from "@/lib/backoffice-admins";
+import { BACKOFFICE_SESSION_COOKIE, BACKOFFICE_SESSION_MAX_AGE } from "@/lib/backoffice-auth";
+import { authenticateAdmin } from "@/lib/backoffice-admins";
+import { createAdminSession } from "@/lib/backoffice-session-server";
 import { clearFailures, isRateLimited, registerFailure } from "@/lib/backoffice-rate-limit";
 
 export async function POST(request: Request) {
-  if (!isSessionConfigured() || !hasConfiguredAdmins()) {
-    return NextResponse.json(
-      {
-        error:
-          "O backoffice ainda não tem contas de administrador configuradas. Corre: node apps/web/scripts/setup-admin.mjs",
-      },
-      { status: 503 },
-    );
-  }
-
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body?.password === "string" ? body.password : "";
@@ -37,15 +23,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const admin = await authenticateAdmin(email, password);
-  if (!admin) {
-    registerFailure(limitKey);
-    return NextResponse.json({ error: "Email ou password incorretos." }, { status: 401 });
-  }
-
-  const token = await createSessionToken(admin.email);
-  if (!token) {
-    return NextResponse.json({ error: "Sessão não configurada no servidor." }, { status: 503 });
+  let token: string;
+  try {
+    const admin = await authenticateAdmin(email, password);
+    if (!admin) {
+      registerFailure(limitKey);
+      return NextResponse.json({ error: "Email ou password incorretos." }, { status: 401 });
+    }
+    token = await createAdminSession(admin.id);
+  } catch {
+    return NextResponse.json(
+      { error: "Não foi possível ligar à base de dados. Tenta novamente." },
+      { status: 503 },
+    );
   }
 
   clearFailures(limitKey);

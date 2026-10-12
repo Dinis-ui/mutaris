@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: "Encomendas",
 };
 
-export default function BackofficeOrdersPage() {
-  const orders = getOrders();
+export default async function BackofficeOrdersPage() {
+  const orders = await getOrders();
 
   return (
     <>

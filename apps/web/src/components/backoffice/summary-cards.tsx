@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
 import { getDashboardSummary } from "@/lib/backoffice";
 
-export function BackofficeSummaryCards() {
-  const summary = getDashboardSummary();
+export async function BackofficeSummaryCards() {
+  const summary = await getDashboardSummary();
 
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

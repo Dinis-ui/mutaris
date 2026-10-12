@@ -49,6 +49,21 @@ export const admins = pgTable("admins", {
   createdAt: createdAt(),
 });
 
+/**
+ * Sessões do backoffice. O cookie guarda um token aleatório; aqui fica só o
+ * hash SHA-256 dele, por isso uma fuga da base de dados não dá acesso. Apagar
+ * a linha termina a sessão de imediato.
+ */
+export const adminSessions = pgTable("admin_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  adminId: uuid("admin_id")
+    .notNull()
+    .references(() => admins.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: createdAt(),
+});
+
 /** Clientes da loja (contas da área de cliente). */
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),

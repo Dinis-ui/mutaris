@@ -1,13 +1,85 @@
+import { createHash, randomBytes } from "node:crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
-import { BACKOFFICE_SESSION_COOKIE, verifySessionToken } from "@/lib/backoffice-auth";
-import { findAdminByEmail, type AdminAccount } from "@/lib/backoffice-admins";
+import { redirect } from "next/navigation";
+import { and, eq, gt, isNull, lt } from "drizzle-orm";
+import { getDb } from "@/db";
+import { adminSessions, admins } from "@/db/schema";
+import { BACKOFFICE_SESSION_COOKIE, BACKOFFICE_SESSION_MAX_AGE } from "@/lib/backoffice-auth";
 
-/** Administrador com sessão válida (ou null). Só para código de servidor. */
-export async function getCurrentAdmin(): Promise<Pick<AdminAccount, "email" | "name"> | null> {
+/**
+ * Sessões do backoffice guardadas na base de dados (só servidor).
+ *
+ * O cookie tem um token aleatório de 256 bits; na base de dados fica o
+ * hash SHA-256. Cada pedido valida a sessão na base de dados, por isso
+ * terminar a sessão (ou desativar o administrador) tem efeito imediato.
+ */
+
+export interface CurrentAdmin {
+  id: string;
+  email: string;
+  name: string;
+}
+
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/** Cria uma sessão para o administrador e devolve o token para o cookie. */
+export async function createAdminSession(adminId: string): Promise<string> {
+  const db = getDb();
+  const token = randomBytes(32).toString("base64url");
+  const expiresAt = new Date(Date.now() + BACKOFFICE_SESSION_MAX_AGE * 1000);
+
+  await db.insert(adminSessions).values({ adminId, tokenHash: hashToken(token), expiresAt });
+  // Limpeza oportunista das sessões já expiradas.
+  await db.delete(adminSessions).where(lt(adminSessions.expiresAt, new Date()));
+
+  return token;
+}
+
+/** Termina a sessão deste token (se existir). */
+export async function destroyAdminSession(token: string): Promise<void> {
+  await getDb().delete(adminSessions).where(eq(adminSessions.tokenHash, hashToken(token)));
+}
+
+/**
+ * Administrador com sessão válida (ou null). Valida na base de dados:
+ * sessão existente, não expirada e conta não desativada. Em cache durante
+ * o mesmo pedido.
+ */
+export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
   const store = await cookies();
-  const session = await verifySessionToken(store.get(BACKOFFICE_SESSION_COOKIE)?.value);
-  if (!session) return null;
+  const token = store.get(BACKOFFICE_SESSION_COOKIE)?.value;
+  if (!token) return null;
 
-  const admin = findAdminByEmail(session.email);
-  return admin ? { email: admin.email, name: admin.name } : null;
+  try {
+    const [row] = await getDb()
+      .select({ id: admins.id, email: admins.email, name: admins.name })
+      .from(adminSessions)
+      .innerJoin(admins, eq(admins.id, adminSessions.adminId))
+      .where(
+        and(
+          eq(adminSessions.tokenHash, hashToken(token)),
+          gt(adminSessions.expiresAt, new Date()),
+          isNull(admins.disabledAt),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  } catch {
+    // Sem base de dados não há sessão válida.
+    return null;
+  }
+});
+
+/**
+ * Exige um administrador com sessão válida; senão, redireciona para o
+ * login. Deve ser chamada junto dos dados (não depender só do
+ * middleware, nem do layout — que não volta a correr em navegação).
+ */
+export async function requireAdmin(): Promise<CurrentAdmin> {
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/backoffice/login");
+  return admin;
 }

@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: "Utilizadores",
 };
 
-export default function BackofficeUsersPage() {
-  const users = getUsers();
+export default async function BackofficeUsersPage() {
+  const users = await getUsers();
 
   return (
     <>
