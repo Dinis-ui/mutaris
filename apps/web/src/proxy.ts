@@ -2,12 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { BACKOFFICE_SESSION_COOKIE } from "@/lib/backoffice-auth";
 
 /**
- * Primeira barreira do `/backoffice`: sem cookie de sessão, vai para o
- * login. Isto NÃO valida a sessão (o middleware não acede à base de
+ * Primeira barreira (ficheiro `proxy`, antigo `middleware`) do `/backoffice`: sem cookie de sessão, vai para o
+ * login. Isto NÃO valida a sessão (o proxy não acede à base de
  * dados) — a validação real é feita no servidor, junto dos dados, por
  * `requireAdmin()` em `lib/backoffice-session-server.ts`.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isLoginRoute = pathname === "/backoffice/login";
