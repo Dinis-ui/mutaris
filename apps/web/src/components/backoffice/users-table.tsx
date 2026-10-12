@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -8,6 +9,7 @@ import { Input } from "@workspace/ui/components/input";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/cn";
 import { formatDate } from "@/lib/format";
+import { UserStatusButton } from "@/components/backoffice/user-status-button";
 import {
   adminUserStatusLabel,
   type AdminUser,
@@ -28,9 +30,8 @@ const STATUS_FILTERS: { value: AdminUserStatus | "todos"; label: string }[] = [
 ];
 
 /**
- * Lista de utilizadores. Pesquisa e filtro só no frontend, sobre dados
- * mockados. "Ver" e "Suspender" aparecem mas estão desativados — ainda não
- * há contas reais nem escrita.
+ * Lista de utilizadores. Pesquisa e filtro só no frontend. "Ver" abre os
+ * detalhes; "Suspender"/"Reativar" gravam o estado na base de dados.
  */
 export function BackofficeUsersTable({ users }: { users: AdminUser[] }) {
   const [query, setQuery] = React.useState("");
@@ -122,13 +123,11 @@ export function BackofficeUsersTable({ users }: { users: AdminUser[] }) {
                       {formatDate(user.createdAt)}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="secondary" size="sm" disabled>
-                          Ver
+                      <div className="flex items-start justify-end gap-2">
+                        <Button asChild variant="secondary" size="sm">
+                          <Link href={`/backoffice/utilizadores/${user.id}`}>Ver</Link>
                         </Button>
-                        <Button variant="ghost" size="sm" disabled>
-                          Suspender
-                        </Button>
+                        <UserStatusButton userId={user.id} status={user.status} />
                       </div>
                     </td>
                   </tr>
@@ -140,8 +139,8 @@ export function BackofficeUsersTable({ users }: { users: AdminUser[] }) {
       )}
 
       <p className="text-xs text-muted-foreground">
-        “Ver” e “Suspender” ainda não estão disponíveis — não existem contas reais nem escrita na
-        base de dados.
+        Suspender e reativar guardam o estado na base de dados. Ainda não bloqueia o
+        acesso: as contas de cliente ainda não estão ligadas à autenticação.
       </p>
     </div>
   );
