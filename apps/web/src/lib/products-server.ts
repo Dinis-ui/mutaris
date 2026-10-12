@@ -10,7 +10,7 @@ import type { Product } from "@workspace/types";
 
 type ProductRow = typeof products.$inferSelect;
 
-function toProduct(row: ProductRow): Product {
+export function toProduct(row: ProductRow): Product {
   return {
     id: row.id,
     slug: row.slug,

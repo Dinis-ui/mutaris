@@ -8,7 +8,8 @@ import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/cn";
-import { formatPrice } from "@/lib/format";
+import { formatExactPrice } from "@/lib/format";
+import { ProductDeleteButton } from "@/components/backoffice/product-delete-button";
 import { getProductCategoryBySlug } from "@/lib/products";
 import type { Product, ProductAvailability } from "@workspace/types";
 
@@ -25,10 +26,8 @@ const AVAILABILITY_DOT: Record<ProductAvailability, string> = {
 };
 
 /**
- * Tabela de gestão do catálogo. Pesquisa só no frontend, sobre os dados
- * mockados — tal como a pesquisa pública da Loja. "Editar"/"Remover"
- * aparecem mas estão desativados: ainda não há escrita no catálogo,
- * apenas leitura (via `getProducts()`).
+ * Tabela de gestão do catálogo. Pesquisa só no frontend. "Editar" abre o
+ * formulário; "Remover" apaga o produto da base de dados.
  */
 export function BackofficeStoreTable({ products }: { products: Product[] }) {
   const [query, setQuery] = React.useState("");
@@ -102,7 +101,7 @@ export function BackofficeStoreTable({ products }: { products: Product[] }) {
                         {category?.name ?? product.category}
                       </td>
                       <td className="px-6 py-4 font-medium text-foreground">
-                        {formatPrice(product.price)}
+                        {formatExactPrice(product.price)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -117,13 +116,11 @@ export function BackofficeStoreTable({ products }: { products: Product[] }) {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="secondary" size="sm" disabled>
-                            Editar
+                        <div className="flex items-start justify-end gap-2">
+                          <Button asChild variant="secondary" size="sm">
+                            <Link href={`/backoffice/loja/${product.id}`}>Editar</Link>
                           </Button>
-                          <Button variant="ghost" size="sm" disabled>
-                            Remover
-                          </Button>
+                          <ProductDeleteButton productId={product.id} />
                         </div>
                       </td>
                     </tr>
@@ -136,8 +133,7 @@ export function BackofficeStoreTable({ products }: { products: Product[] }) {
       )}
 
       <p className="text-xs text-muted-foreground">
-        “Editar” e “Remover” ainda não estão disponíveis — o catálogo é só de leitura enquanto não
-        houver escrita ligada à base de dados.
+        As alterações aplicam-se de imediato à loja pública. Remover um produto é definitivo.
       </p>
     </div>
   );
