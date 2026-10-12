@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/backoffice-session-server";
+import { recordActivity } from "@/lib/audit";
 import { isTicketStatus, updateTicketStatus } from "@/lib/backoffice-support";
+import { ticketStatusLabel } from "@/lib/account";
 
 export type TicketStatusResult = { ok: true } | { ok: false; error: string };
 
@@ -22,8 +24,12 @@ export async function setTicketStatusAction(
   }
 
   try {
-    const found = await updateTicketStatus(ticketId, status);
-    if (!found) return { ok: false, error: "Pedido de suporte não encontrado." };
+    const reference = await updateTicketStatus(ticketId, status);
+    if (!reference) return { ok: false, error: "Pedido de suporte não encontrado." };
+    await recordActivity({
+      action: "ticket.status_changed",
+      target: `${reference} → ${ticketStatusLabel[status]}`,
+    });
   } catch {
     return { ok: false, error: "Não foi possível guardar. Tenta novamente." };
   }

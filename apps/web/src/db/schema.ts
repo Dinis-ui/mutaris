@@ -64,6 +64,21 @@ export const adminSessions = pgTable("admin_sessions", {
   createdAt: createdAt(),
 });
 
+/**
+ * Registo de atividade do backoffice: uma linha por ação de administrador.
+ * `actorName` fica copiado para o registo continuar legível se a conta do
+ * administrador for removida. `action` é um código (ver `lib/audit-actions.ts`)
+ * e `target` descreve sobre o quê (nome, referência, número…).
+ */
+export const auditLog = pgTable("audit_log", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  adminId: uuid("admin_id").references(() => admins.id, { onDelete: "set null" }),
+  actorName: text("actor_name").notNull(),
+  action: text("action").notNull(),
+  target: text("target").default("").notNull(),
+  createdAt: createdAt(),
+});
+
 /** Clientes da loja (contas da área de cliente). */
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),

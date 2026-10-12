@@ -62,19 +62,19 @@ export async function getTicketDetail(id: string): Promise<TicketDetail | null> 
   };
 }
 
-/** Altera o estado do pedido. Devolve false se o pedido não existir. */
+/** Altera o estado do pedido. Devolve a referência, ou null se não existir. */
 export async function updateTicketStatus(
   id: string,
   status: SupportTicketStatus,
-): Promise<boolean> {
+): Promise<string | null> {
   await requireAdmin();
-  if (!isUuid(id)) return false;
+  if (!isUuid(id)) return null;
 
-  const updated = await getDb()
+  const [updated] = await getDb()
     .update(supportTickets)
     .set({ status, updatedAt: new Date() })
     .where(eq(supportTickets.id, id))
-    .returning({ id: supportTickets.id });
+    .returning({ reference: supportTickets.reference });
 
-  return updated.length > 0;
+  return updated?.reference ?? null;
 }

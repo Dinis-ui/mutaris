@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { BACKOFFICE_SESSION_COOKIE, BACKOFFICE_SESSION_MAX_AGE } from "@/lib/backoffice-auth";
 import { authenticateAdmin } from "@/lib/backoffice-admins";
+import { recordActivity } from "@/lib/audit";
 import { createAdminSession } from "@/lib/backoffice-session-server";
 import { clearFailures, isRateLimited, registerFailure } from "@/lib/backoffice-rate-limit";
 
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email ou password incorretos." }, { status: 401 });
     }
     token = await createAdminSession(admin.id);
+    await recordActivity({ action: "admin.login", actor: { id: admin.id, name: admin.name } });
   } catch {
     return NextResponse.json(
       { error: "Não foi possível ligar à base de dados. Tenta novamente." },

@@ -85,13 +85,13 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Sa
   return { ok: true, slug: input.slug };
 }
 
-/** Remove o produto. Devolve false se não existir. */
-export async function deleteProduct(id: string): Promise<boolean> {
+/** Remove o produto. Devolve o nome, ou null se não existir. */
+export async function deleteProduct(id: string): Promise<string | null> {
   await requireAdmin();
-  if (!isPlausibleId(id)) return false;
-  const removed = await getDb()
+  if (!isPlausibleId(id)) return null;
+  const [removed] = await getDb()
     .delete(products)
     .where(eq(products.id, id))
-    .returning({ id: products.id });
-  return removed.length > 0;
+    .returning({ name: products.name });
+  return removed?.name ?? null;
 }

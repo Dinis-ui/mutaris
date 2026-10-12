@@ -15,6 +15,13 @@
       "when": 1791639363230,
       "tag": "0001_steady_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791816144118,
+      "tag": "0002_wealthy_venom",
+      "breakpoints": true
     }
   ]
 }

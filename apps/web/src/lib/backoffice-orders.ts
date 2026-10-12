@@ -60,16 +60,16 @@ export async function getOrderDetail(id: string): Promise<AdminOrder | null> {
   };
 }
 
-/** Altera o estado da encomenda. Devolve false se a encomenda não existir. */
-export async function updateOrderStatus(id: string, status: OrderStatus): Promise<boolean> {
+/** Altera o estado da encomenda. Devolve o número, ou null se não existir. */
+export async function updateOrderStatus(id: string, status: OrderStatus): Promise<string | null> {
   await requireAdmin();
-  if (!isUuid(id)) return false;
+  if (!isUuid(id)) return null;
 
-  const updated = await getDb()
+  const [updated] = await getDb()
     .update(orders)
     .set({ status })
     .where(eq(orders.id, id))
-    .returning({ id: orders.id });
+    .returning({ number: orders.number });
 
-  return updated.length > 0;
+  return updated?.number ?? null;
 }

@@ -1,9 +1,10 @@
 import { count, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { requireAdmin } from "@/lib/backoffice-session-server";
-import { orders, products, supportTickets, users } from "@/db/schema";
+import { auditLog, orders, products, supportTickets, users } from "@/db/schema";
+import { ACTIVITY_ACTIONS } from "@/lib/audit-actions";
+import { formatRelativeTime } from "@/lib/format";
 import {
-  mockActivity,
   platformStatus,
   type ActivityItem,
   type PlatformStatusItem,
@@ -19,7 +20,7 @@ import type { AdminOrder } from "@/data/backoffice-orders";
  * antes (`AdminUser`, `AdminSupportTicket`, `AdminOrder`…), por isso não
  * dependem da base de dados diretamente.
  *
- * Ainda mockado: `getRecentActivity` (não existe registo de atividade).
+ * `getRecentActivity` lê o registo de atividade (`audit_log`).
  */
 
 const REMOVED_CUSTOMER_LABEL = "Cliente removido";
@@ -63,8 +64,25 @@ export async function getDashboardSummary(): Promise<SummaryCardData[]> {
   ];
 }
 
-export function getRecentActivity(): ActivityItem[] {
-  return mockActivity;
+export async function getRecentActivity(limit = 6): Promise<ActivityItem[]> {
+  await requireAdmin();
+  const rows = await getDb()
+    .select()
+    .from(auditLog)
+    .orderBy(desc(auditLog.createdAt))
+    .limit(limit);
+
+  const now = new Date();
+  return rows.map((row) => {
+    const meta = ACTIVITY_ACTIONS[row.action];
+    return {
+      id: row.id,
+      title: meta?.title ?? "Ação registada",
+      description: row.target ? `${row.target} · por ${row.actorName}` : `Por ${row.actorName}`,
+      timestamp: formatRelativeTime(row.createdAt, now),
+      tone: meta?.tone ?? "neutral",
+    };
+  });
 }
 
 /** Estado da plataforma; a linha da base de dados é verificada a sério. */

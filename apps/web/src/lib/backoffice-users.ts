@@ -68,16 +68,16 @@ export async function getUserDetail(id: string): Promise<UserDetail | null> {
   };
 }
 
-/** Altera o estado do utilizador. Devolve false se o utilizador não existir. */
-export async function updateUserStatus(id: string, status: AdminUserStatus): Promise<boolean> {
+/** Altera o estado do utilizador. Devolve o nome, ou null se não existir. */
+export async function updateUserStatus(id: string, status: AdminUserStatus): Promise<string | null> {
   await requireAdmin();
-  if (!isValidUserId(id)) return false;
+  if (!isValidUserId(id)) return null;
 
-  const updated = await getDb()
+  const [updated] = await getDb()
     .update(users)
     .set({ status })
     .where(eq(users.id, id))
-    .returning({ id: users.id });
+    .returning({ name: users.name });
 
-  return updated.length > 0;
+  return updated?.name ?? null;
 }

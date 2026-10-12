@@ -33,45 +33,6 @@ export interface PlatformStatusItem {
   tone: PlatformStatusTone;
 }
 
-/** As 5 entradas mais recentes de atividade — dados de demonstração. */
-export const mockActivity: ActivityItem[] = [
-  {
-    id: "act-1",
-    title: "Nova conta criada",
-    description: "Um novo utilizador registou-se na área de cliente.",
-    timestamp: "Há 12 minutos",
-    tone: "neutral",
-  },
-  {
-    id: "act-2",
-    title: "Pedido de suporte aberto",
-    description: "Um cliente abriu um novo pedido de suporte.",
-    timestamp: "Há 48 minutos",
-    tone: "attention",
-  },
-  {
-    id: "act-3",
-    title: "Encomenda confirmada",
-    description: "Uma encomenda de demonstração foi marcada como confirmada.",
-    timestamp: "Há 2 horas",
-    tone: "positive",
-  },
-  {
-    id: "act-4",
-    title: "Produto atualizado",
-    description: "A descrição de um produto da loja foi editada.",
-    timestamp: "Ontem",
-    tone: "neutral",
-  },
-  {
-    id: "act-5",
-    title: "Pedido de suporte resolvido",
-    description: "Um pedido de suporte em aberto foi marcado como resolvido.",
-    timestamp: "Há 2 dias",
-    tone: "positive",
-  },
-];
-
 /** Visão geral do estado da plataforma — dados de demonstração. */
 export const platformStatus: PlatformStatusItem[] = [
   {

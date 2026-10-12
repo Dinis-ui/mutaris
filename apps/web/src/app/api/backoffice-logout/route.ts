@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { BACKOFFICE_SESSION_COOKIE } from "@/lib/backoffice-auth";
-import { destroyAdminSession } from "@/lib/backoffice-session-server";
+import { recordActivity } from "@/lib/audit";
+import { destroyAdminSession, getCurrentAdmin } from "@/lib/backoffice-session-server";
 
 export async function POST() {
   const store = await cookies();
@@ -9,6 +10,8 @@ export async function POST() {
 
   if (token) {
     try {
+      const admin = await getCurrentAdmin();
+      if (admin) await recordActivity({ action: "admin.logout", actor: admin });
       await destroyAdminSession(token);
     } catch {
       // Mesmo que a base de dados falhe, o cookie é apagado abaixo.

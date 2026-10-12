@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/backoffice-session-server";
+import { recordActivity } from "@/lib/audit";
 import { updateUserStatus } from "@/lib/backoffice-users";
 
 export type UserStatusResult = { ok: true } | { ok: false; error: string };
@@ -22,8 +23,12 @@ export async function setUserStatusAction(
   }
 
   try {
-    const found = await updateUserStatus(userId, status);
-    if (!found) return { ok: false, error: "Utilizador não encontrado." };
+    const name = await updateUserStatus(userId, status);
+    if (!name) return { ok: false, error: "Utilizador não encontrado." };
+    await recordActivity({
+      action: status === "suspended" ? "user.suspended" : "user.reactivated",
+      target: name,
+    });
   } catch {
     return { ok: false, error: "Não foi possível guardar. Tenta novamente." };
   }

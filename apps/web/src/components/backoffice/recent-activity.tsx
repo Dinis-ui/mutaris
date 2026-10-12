@@ -9,8 +9,8 @@ const dotClasses: Record<ActivityTone, string> = {
   attention: "bg-foreground",
 };
 
-export function BackofficeRecentActivity() {
-  const activity = getRecentActivity();
+export async function BackofficeRecentActivity() {
+  const activity = await getRecentActivity();
 
   return (
     <Card>
@@ -18,6 +18,9 @@ export function BackofficeRecentActivity() {
         <CardTitle>Atividade recente</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
+        {activity.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Ainda não há atividade registada.</p>
+        ) : null}
         <ul className="flex flex-col gap-5">
           {activity.map((item) => (
             <li key={item.id} className="flex gap-3">

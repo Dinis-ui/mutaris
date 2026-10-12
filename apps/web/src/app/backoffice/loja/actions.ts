@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/backoffice-session-server";
+import { recordActivity } from "@/lib/audit";
 import { createProduct, deleteProduct, updateProduct } from "@/lib/backoffice-products";
 import { validateProductForm, type ProductFormState } from "@/lib/backoffice-product-form";
 
@@ -45,6 +46,10 @@ export async function saveProductAction(formData: FormData): Promise<ProductForm
     };
   }
 
+  await recordActivity({
+    action: id ? "product.updated" : "product.created",
+    target: parsed.value.name,
+  });
   revalidateStore();
   if (!id) redirect("/backoffice/loja");
   return { status: "saved", message: "Alterações guardadas." };
@@ -57,8 +62,9 @@ export async function deleteProductAction(productId: string): Promise<DeleteProd
   if (typeof productId !== "string") return { ok: false, error: "Pedido inválido." };
 
   try {
-    const found = await deleteProduct(productId);
-    if (!found) return { ok: false, error: "Produto não encontrado." };
+    const name = await deleteProduct(productId);
+    if (!name) return { ok: false, error: "Produto não encontrado." };
+    await recordActivity({ action: "product.deleted", target: name });
   } catch {
     return { ok: false, error: "Não foi possível remover. Tenta novamente." };
   }

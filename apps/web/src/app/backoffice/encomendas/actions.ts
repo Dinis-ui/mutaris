@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/backoffice-session-server";
+import { recordActivity } from "@/lib/audit";
 import { isOrderStatus, updateOrderStatus } from "@/lib/backoffice-orders";
+import { orderStatusLabel } from "@/lib/account";
 
 export type OrderStatusResult = { ok: true } | { ok: false; error: string };
 
@@ -22,8 +24,12 @@ export async function setOrderStatusAction(
   }
 
   try {
-    const found = await updateOrderStatus(orderId, status);
-    if (!found) return { ok: false, error: "Encomenda não encontrada." };
+    const number = await updateOrderStatus(orderId, status);
+    if (!number) return { ok: false, error: "Encomenda não encontrada." };
+    await recordActivity({
+      action: "order.status_changed",
+      target: `${number} → ${orderStatusLabel[status]}`,
+    });
   } catch {
     return { ok: false, error: "Não foi possível guardar. Tenta novamente." };
   }
