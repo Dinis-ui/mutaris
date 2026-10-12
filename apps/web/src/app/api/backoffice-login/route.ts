@@ -14,24 +14,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Indica o email e a password." }, { status: 400 });
   }
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  const limitKey = `${ip}|${email}`;
-
-  if (isRateLimited(limitKey)) {
-    return NextResponse.json(
-      { error: "Demasiadas tentativas. Tenta novamente dentro de alguns minutos." },
-      { status: 429 },
-    );
-  }
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const attempt = { ip, email };
 
   let token: string;
   try {
+    if (await isRateLimited(attempt)) {
+      return NextResponse.json(
+        { error: "Demasiadas tentativas. Tenta novamente dentro de alguns minutos." },
+        { status: 429 },
+      );
+    }
+
     const admin = await authenticateAdmin(email, password);
     if (!admin) {
-      registerFailure(limitKey);
+      await registerFailure(attempt);
       return NextResponse.json({ error: "Email ou password incorretos." }, { status: 401 });
     }
+
     token = await createAdminSession(admin.id);
+    await clearFailures(attempt);
     await recordActivity({ action: "admin.login", actor: { id: admin.id, name: admin.name } });
   } catch {
     return NextResponse.json(
@@ -40,7 +42,6 @@ export async function POST(request: Request) {
     );
   }
 
-  clearFailures(limitKey);
   const response = NextResponse.json({ ok: true });
   response.cookies.set(BACKOFFICE_SESSION_COOKIE, token, {
     httpOnly: true,

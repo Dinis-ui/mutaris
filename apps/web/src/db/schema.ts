@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   pgEnum,
   pgTable,
@@ -63,6 +64,21 @@ export const adminSessions = pgTable("admin_sessions", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: createdAt(),
 });
+
+/**
+ * Tentativas de login falhadas, para limitar tentativas (ver
+ * `lib/backoffice-rate-limit.ts`). Guarda só o hash da chave (IP, ou IP +
+ * email) — nunca o email nem o IP em texto.
+ */
+export const loginFailures = pgTable(
+  "login_failures",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    keyHash: text("key_hash").notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("login_failures_key_idx").on(table.keyHash, table.createdAt)],
+);
 
 /**
  * Registo de atividade do backoffice: uma linha por ação de administrador.
