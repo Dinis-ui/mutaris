@@ -145,6 +145,7 @@ export async function getOrders(): Promise<AdminOrder[]> {
       itemCount: orders.itemCount,
       createdAt: orders.createdAt,
       isDemo: orders.isDemo,
+      userId: orders.userId,
       customerName: users.name,
     })
     .from(orders)
@@ -155,6 +156,7 @@ export async function getOrders(): Promise<AdminOrder[]> {
     id: row.id,
     number: row.number,
     customerName: row.customerName ?? REMOVED_CUSTOMER_LABEL,
+    userId: row.userId,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     total: row.totalCents / 100,

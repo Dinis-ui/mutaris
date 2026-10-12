@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -9,6 +10,7 @@ import { Card, CardContent } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/cn";
 import { formatDate, formatExactPrice } from "@/lib/format";
 import { orderStatusLabel } from "@/lib/account";
+import { OrderQuickAction } from "@/components/backoffice/order-status-control";
 import type { AdminOrder } from "@/data/backoffice-orders";
 import type { OrderStatus } from "@workspace/types";
 
@@ -30,9 +32,8 @@ const STATUS_FILTERS: { value: OrderStatus | "todas"; label: string }[] = [
 ];
 
 /**
- * Lista de encomendas. Pesquisa e filtro só no frontend, sobre dados
- * mockados. "Ver" aparece mas está desativado — ainda não há encomendas
- * nem pagamentos reais.
+ * Lista de encomendas. Pesquisa e filtro só no frontend. "Ver" abre os
+ * detalhes; o atalho avança o estado e grava-o na base de dados.
  */
 export function BackofficeOrdersTable({ orders }: { orders: AdminOrder[] }) {
   const [query, setQuery] = React.useState("");
@@ -132,10 +133,13 @@ export function BackofficeOrdersTable({ orders }: { orders: AdminOrder[] }) {
                     <td className="px-6 py-4 font-medium text-foreground">
                       {formatExactPrice(order.total)}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button variant="secondary" size="sm" disabled>
-                        Ver
-                      </Button>
+                    <td className="px-6 py-4">
+                      <div className="flex items-start justify-end gap-2">
+                        <Button asChild variant="secondary" size="sm">
+                          <Link href={`/backoffice/encomendas/${order.id}`}>Ver</Link>
+                        </Button>
+                        <OrderQuickAction orderId={order.id} status={order.status} />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -146,8 +150,8 @@ export function BackofficeOrdersTable({ orders }: { orders: AdminOrder[] }) {
       )}
 
       <p className="text-xs text-muted-foreground">
-        “Ver” ainda não está disponível — não existem encomendas nem pagamentos reais, e os valores
-        acima são fictícios.
+        As alterações de estado ficam guardadas na base de dados, mas não mexem em pagamentos nem
+        notificam o cliente. Os valores das encomendas “Demo” são fictícios.
       </p>
     </div>
   );

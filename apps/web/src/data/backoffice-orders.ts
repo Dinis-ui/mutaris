@@ -12,6 +12,8 @@ export interface AdminOrder {
   id: string;
   number: string;
   customerName: string;
+  /** Id do cliente na base de dados (null se a conta foi removida). */
+  userId?: string | null;
   status: OrderStatus;
   /** ISO 8601 date. */
   createdAt: string;
