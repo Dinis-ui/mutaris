@@ -101,6 +101,7 @@ export async function getSupportTickets(): Promise<AdminSupportTicket[]> {
       status: supportTickets.status,
       createdAt: supportTickets.createdAt,
       isDemo: supportTickets.isDemo,
+      userId: supportTickets.userId,
       customerName: users.name,
     })
     .from(supportTickets)
@@ -112,6 +113,7 @@ export async function getSupportTickets(): Promise<AdminSupportTicket[]> {
     reference: row.reference,
     subject: row.subject,
     customerName: row.customerName ?? REMOVED_CUSTOMER_LABEL,
+    userId: row.userId,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
     isDemo: row.isDemo,

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
@@ -9,6 +10,7 @@ import { Card, CardContent } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/cn";
 import { formatDate } from "@/lib/format";
 import { ticketStatusLabel } from "@/lib/account";
+import { TicketQuickAction } from "@/components/backoffice/ticket-status-control";
 import type { AdminSupportTicket } from "@/data/backoffice-support";
 import type { SupportTicketStatus } from "@workspace/types";
 
@@ -27,8 +29,8 @@ const STATUS_FILTERS: { value: SupportTicketStatus | "todos"; label: string }[] 
 
 /**
  * Lista de pedidos de suporte. Pesquisa e filtro de estado só no
- * frontend, sobre dados mockados. "Ver" aparece mas está desativado —
- * ainda não há um sistema de suporte real por trás.
+ * frontend. "Ver" abre os detalhes; "Resolver"/"Reabrir" gravam o estado
+ * na base de dados.
  */
 export function BackofficeSupportTable({ tickets }: { tickets: AdminSupportTicket[] }) {
   const [query, setQuery] = React.useState("");
@@ -124,10 +126,13 @@ export function BackofficeSupportTable({ tickets }: { tickets: AdminSupportTicke
                     <td className="px-6 py-4 text-muted-foreground">
                       {formatDate(ticket.createdAt)}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button variant="secondary" size="sm" disabled>
-                        Ver
-                      </Button>
+                    <td className="px-6 py-4">
+                      <div className="flex items-start justify-end gap-2">
+                        <Button asChild variant="secondary" size="sm">
+                          <Link href={`/backoffice/suporte/${ticket.id}`}>Ver</Link>
+                        </Button>
+                        <TicketQuickAction ticketId={ticket.id} status={ticket.status} />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -138,7 +143,8 @@ export function BackofficeSupportTable({ tickets }: { tickets: AdminSupportTicke
       )}
 
       <p className="text-xs text-muted-foreground">
-        “Ver” ainda não está disponível — não há um sistema de suporte real ligado a estes pedidos.
+        As alterações de estado ficam guardadas na base de dados. Os pedidos ainda não têm
+        mensagens nem notificam o cliente.
       </p>
     </div>
   );
