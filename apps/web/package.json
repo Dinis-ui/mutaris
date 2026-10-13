@@ -16,6 +16,7 @@
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-select": "^2.3.7",
+    "@vercel/blob": "^2.8.1",
     "@workspace/types": "*",
     "@workspace/ui": "*",
     "drizzle-orm": "^0.45.4",

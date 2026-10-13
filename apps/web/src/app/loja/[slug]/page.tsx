@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
@@ -10,6 +11,7 @@ import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { ProductCard } from "@/components/store/product-card";
 import { formatPrice } from "@/lib/format";
 import { getProductCategoryBySlug } from "@/lib/products";
+import { isBlobImageUrl } from "@/lib/product-image";
 import { getProductBySlug, getProducts } from "@/lib/products-server";
 import type { ProductAvailability } from "@workspace/types";
 
@@ -62,11 +64,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </Link>
 
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-            {/* Ainda não há fotografia real de produto. */}
-            <div className="flex aspect-square w-full max-w-md shrink-0 items-center justify-center rounded-xl border border-border bg-ink-3">
-              <p className="px-6 text-center text-sm text-muted-foreground">
-                Sem imagem disponível
-              </p>
+            <div className="relative flex aspect-square w-full max-w-md shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-ink-3">
+              {isBlobImageUrl(product.image) ? (
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  priority
+                  sizes="(min-width: 768px) 28rem, 100vw"
+                  className="object-cover"
+                />
+              ) : (
+                <p className="px-6 text-center text-sm text-muted-foreground">
+                  Sem imagem disponível
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-5">

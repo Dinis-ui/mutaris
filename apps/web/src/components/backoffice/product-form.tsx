@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@workspace/types";
 import { Button } from "@workspace/ui/components/button";
@@ -16,6 +17,11 @@ import {
   type ProductFormState,
 } from "@/lib/backoffice-product-form";
 import { saveProductAction } from "@/app/backoffice/loja/actions";
+import {
+  PRODUCT_IMAGE_MAX_BYTES,
+  PRODUCT_IMAGE_TYPES,
+  isBlobImageUrl,
+} from "@/lib/product-image";
 
 const SELECT_CLASS =
   "h-12 w-full rounded-lg border border-border bg-input px-4 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
@@ -65,6 +71,63 @@ export function ProductForm({ product }: { product?: Product }) {
   const [slugTouched, setSlugTouched] = React.useState(isEditing);
   const [state, setState] = React.useState<ProductFormState>({ status: "idle" });
   const [pending, startTransition] = React.useTransition();
+  const [imageUrl, setImageUrl] = React.useState(product?.image ?? "");
+  // Imagem enviada nesta sessão e ainda não guardada no produto (pode ser apagada ao trocar/remover).
+  const [unsavedImage, setUnsavedImage] = React.useState<string | null>(null);
+  const [uploading, setUploading] = React.useState(false);
+  const [imageError, setImageError] = React.useState<string | null>(null);
+
+  function discardFromStorage(url: string | null) {
+    if (!url) return;
+    void fetch("/api/backoffice-upload", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    }).catch(() => undefined);
+  }
+
+  async function onImageSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    setImageError(null);
+    if (!(PRODUCT_IMAGE_TYPES as readonly string[]).includes(file.type)) {
+      setImageError("Usa uma imagem JPG, PNG ou WebP.");
+      return;
+    }
+    if (file.size > PRODUCT_IMAGE_MAX_BYTES) {
+      setImageError("A imagem é demasiado grande (máximo 4 MB).");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      const response = await fetch("/api/backoffice-upload", { method: "POST", body });
+      const data = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!response.ok || !data?.url) {
+        setImageError(data?.error ?? "Não foi possível carregar a imagem.");
+        return;
+      }
+      discardFromStorage(unsavedImage);
+      setImageUrl(data.url);
+      setUnsavedImage(data.url);
+    } catch {
+      setImageError("Não foi possível carregar a imagem. Tenta novamente.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function onRemoveImage() {
+    setImageError(null);
+    discardFromStorage(unsavedImage);
+    setUnsavedImage(null);
+    setImageUrl("");
+  }
 
   function onNameChange(value: string) {
     setName(value);
@@ -75,7 +138,9 @@ export function ProductForm({ product }: { product?: Product }) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     startTransition(async () => {
-      setState(await saveProductAction(formData));
+      const result = await saveProductAction(formData);
+      setState(result);
+      if (result.status === "saved") setUnsavedImage(null);
     });
   }
 
@@ -195,8 +260,46 @@ export function ProductForm({ product }: { product?: Product }) {
         />
       </Field>
 
+      <Field
+        id="product-image"
+        label="Imagem"
+        hint="JPG, PNG ou WebP, até 4 MB. Aparece na loja e na página do produto."
+        error={imageError ?? errors.image}
+      >
+        <input type="hidden" name="image" value={imageUrl} />
+        <div className="flex flex-col gap-3">
+          {isBlobImageUrl(imageUrl) ? (
+            <div className="relative aspect-[4/3] w-full max-w-xs overflow-hidden rounded-lg border border-border bg-ink-3">
+              <Image
+                src={imageUrl}
+                alt={name ? `Imagem de ${name}` : "Imagem do produto"}
+                fill
+                sizes="320px"
+                className="object-cover"
+              />
+            </div>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              id="product-image"
+              type="file"
+              accept={PRODUCT_IMAGE_TYPES.join(",")}
+              onChange={onImageSelected}
+              disabled={uploading}
+              className="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-card file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground"
+            />
+            {uploading ? <span className="text-sm text-muted-foreground">A carregar…</span> : null}
+            {imageUrl && !uploading ? (
+              <Button type="button" variant="ghost" size="sm" onClick={onRemoveImage}>
+                Remover imagem
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </Field>
+
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || uploading}>
           {pending ? "A guardar…" : isEditing ? "Guardar alterações" : "Criar produto"}
         </Button>
         <Button asChild variant="ghost">

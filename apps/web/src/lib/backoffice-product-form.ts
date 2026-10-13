@@ -1,5 +1,6 @@
 import type { ProductAvailability } from "@workspace/types";
 import { productCategories } from "@/data/product-categories";
+import { isBlobImageUrl } from "@/lib/product-image";
 
 /**
  * Validação do formulário de produto. Sem dependências de servidor — é
@@ -22,7 +23,8 @@ export type ProductField =
   | "description"
   | "price"
   | "availability"
-  | "features";
+  | "features"
+  | "image";
 
 export interface ProductInput {
   name: string;
@@ -32,6 +34,8 @@ export interface ProductInput {
   priceCents: number;
   availability: ProductAvailability;
   features: string[];
+  /** Endereço da imagem no armazenamento Blob, ou null se não tiver. */
+  image: string | null;
 }
 
 export type ProductFieldErrors = Partial<Record<ProductField, string>>;
@@ -116,6 +120,11 @@ export function validateProductForm(
     errors.features = "No máximo 20 características, com até 120 caracteres cada.";
   }
 
+  const rawImage = text(formData, "image").trim();
+  if (rawImage && !isBlobImageUrl(rawImage)) {
+    errors.image = "Imagem inválida. Carrega a imagem outra vez.";
+  }
+
   if (Object.keys(errors).length > 0 || priceCents === null) {
     return { ok: false, fieldErrors: errors };
   }
@@ -130,6 +139,7 @@ export function validateProductForm(
       priceCents,
       availability: availability as ProductAvailability,
       features,
+      image: rawImage || null,
     },
   };
 }

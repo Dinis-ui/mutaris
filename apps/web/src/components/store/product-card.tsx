@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@workspace/ui/components/card";
@@ -6,6 +7,7 @@ import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/cn";
 import { formatPrice } from "@/lib/format";
 import { getProductCategoryBySlug } from "@/lib/products";
+import { isBlobImageUrl } from "@/lib/product-image";
 import { iconRegistry } from "@/lib/icons";
 import type { Product, ProductAvailability } from "@workspace/types";
 
@@ -31,9 +33,19 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="flex h-full flex-col overflow-hidden">
-      {/* Ainda não há fotografia de produto — o ícone da categoria substitui-a. */}
-      <div className="flex aspect-[4/3] items-center justify-center bg-ink-3">
-        {Icon ? <Icon aria-hidden="true" className="h-10 w-10 text-muted-foreground" /> : null}
+      {/* Sem imagem carregada, o ícone da categoria substitui-a. */}
+      <div className="relative flex aspect-[4/3] items-center justify-center bg-ink-3">
+        {isBlobImageUrl(product.image) ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        ) : Icon ? (
+          <Icon aria-hidden="true" className="h-10 w-10 text-muted-foreground" />
+        ) : null}
       </div>
 
       <CardHeader className="gap-2">

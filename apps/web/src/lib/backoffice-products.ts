@@ -1,16 +1,18 @@
 import { randomUUID } from "node:crypto";
+import { del } from "@vercel/blob";
 import { and, eq, ne } from "drizzle-orm";
 import type { Product } from "@workspace/types";
 import { getDb } from "@/db";
 import { products } from "@/db/schema";
 import { requireAdmin } from "@/lib/backoffice-session-server";
 import { toProduct } from "@/lib/products-server";
+import { isBlobImageUrl } from "@/lib/product-image";
 import type { ProductFieldErrors, ProductInput } from "@/lib/backoffice-product-form";
 
 /**
  * Escrita no catálogo (só servidor). Todas as funções exigem um
- * administrador com sessão válida. `solutionIds`, `image` e `isDemo`
- * não são editáveis aqui — mantêm-se como estão.
+ * administrador com sessão válida. `solutionIds` e `isDemo` não são
+ * editáveis aqui — mantêm-se como estão.
  */
 
 export type SaveProductResult =
@@ -18,6 +20,16 @@ export type SaveProductResult =
   | { ok: false; fieldErrors?: ProductFieldErrors; message?: string };
 
 const SLUG_TAKEN: ProductFieldErrors = { slug: "Já existe um produto com este endereço." };
+
+/** Apaga uma imagem do armazenamento (melhor esforço: falhar aqui não deve falhar a operação). */
+async function deleteStoredImage(url: string | null | undefined): Promise<void> {
+  if (!url || !isBlobImageUrl(url) || !process.env.BLOB_READ_WRITE_TOKEN) return;
+  try {
+    await del(url);
+  } catch {
+    // Uma imagem esquecida no armazenamento não afeta a loja.
+  }
+}
 
 function isPlausibleId(id: string): boolean {
   return id.length > 0 && id.length <= 100;
@@ -54,6 +66,7 @@ export async function createProduct(input: ProductInput): Promise<SaveProductRes
       priceCents: input.priceCents,
       availability: input.availability,
       features: input.features,
+      image: input.image,
       solutionIds: [],
       isDemo: false,
     });
@@ -66,6 +79,12 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Sa
   if (!isPlausibleId(id)) return { ok: false, message: "Produto não encontrado." };
   if (await slugInUse(input.slug, id)) return { ok: false, fieldErrors: SLUG_TAKEN };
 
+  const [previous] = await getDb()
+    .select({ image: products.image })
+    .from(products)
+    .where(eq(products.id, id))
+    .limit(1);
+
   const updated = await getDb()
     .update(products)
     .set({
@@ -76,12 +95,15 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Sa
       priceCents: input.priceCents,
       availability: input.availability,
       features: input.features,
+      image: input.image,
       updatedAt: new Date(),
     })
     .where(eq(products.id, id))
     .returning({ id: products.id });
 
   if (updated.length === 0) return { ok: false, message: "Produto não encontrado." };
+  // A imagem anterior deixa de ser usada se foi substituída ou removida.
+  if (previous?.image && previous.image !== input.image) await deleteStoredImage(previous.image);
   return { ok: true, slug: input.slug };
 }
 
@@ -92,6 +114,7 @@ export async function deleteProduct(id: string): Promise<string | null> {
   const [removed] = await getDb()
     .delete(products)
     .where(eq(products.id, id))
-    .returning({ name: products.name });
+    .returning({ name: products.name, image: products.image });
+  if (removed) await deleteStoredImage(removed.image);
   return removed?.name ?? null;
 }
