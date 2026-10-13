@@ -33,7 +33,7 @@ export interface PlatformStatusItem {
   tone: PlatformStatusTone;
 }
 
-/** Visão geral do estado da plataforma — dados de demonstração. */
+/** Visão geral do estado da plataforma. */
 export const platformStatus: PlatformStatusItem[] = [
   {
     id: "site",
@@ -44,7 +44,7 @@ export const platformStatus: PlatformStatusItem[] = [
   {
     id: "loja",
     label: "Loja",
-    description: "Catálogo a funcionar com dados de demonstração.",
+    description: "Catálogo ligado à base de dados.",
     tone: "positive",
   },
   {

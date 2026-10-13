@@ -13,7 +13,7 @@ export default function BackofficeDashboardPage() {
     <>
       <BackofficePageHeader
         title="Dashboard"
-        description="Visão geral da plataforma MUTARIS. Os dados na base de dados são, por agora, de demonstração."
+        description="Visão geral da plataforma MUTARIS."
       />
       <BackofficeSummaryCards />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
