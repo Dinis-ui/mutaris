@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/componen
 import { BackofficePageHeader } from "@/components/backoffice/page-header";
 import { TicketStatusPicker } from "@/components/backoffice/ticket-status-control";
 import { getTicketDetail } from "@/lib/backoffice-support";
+import { supportCategories } from "@/lib/support";
 import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -23,7 +24,8 @@ export default async function BackofficeTicketDetailPage({
   const detail = await getTicketDetail(id);
   if (!detail) notFound();
 
-  const { ticket, updatedAt } = detail;
+  const { ticket, updatedAt, category, message } = detail;
+  const categoryLabel = supportCategories.find((item) => item.value === category)?.label;
 
   return (
     <>
@@ -79,8 +81,28 @@ export default async function BackofficeTicketDetailPage({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Mensagem do cliente</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 pt-0">
+          {message ? (
+            <>
+              {categoryLabel ? (
+                <p className="text-sm text-muted-foreground">Tipo de pedido: {categoryLabel}</p>
+              ) : null}
+              <p className="whitespace-pre-wrap text-sm text-foreground">{message}</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Este pedido não tem mensagem (é um pedido de demonstração ou anterior a esta funcionalidade).
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <p className="text-xs text-muted-foreground">
-        Os pedidos ainda não têm mensagens: a conversa com o cliente não está implementada.
+        A conversa com o cliente (respostas) ainda não está implementada: aqui só se gere o estado.
       </p>
     </>
   );

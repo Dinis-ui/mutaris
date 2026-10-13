@@ -24,6 +24,13 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/** Hash do token da sessão atual (para a distinguir das outras), ou null. */
+export async function getCurrentSessionHash(): Promise<string | null> {
+  const store = await cookies();
+  const token = store.get(CUSTOMER_SESSION_COOKIE)?.value;
+  return token ? hashToken(token) : null;
+}
+
 export async function createUserSession(userId: string): Promise<string> {
   const db = getDb();
   const token = randomBytes(32).toString("base64url");

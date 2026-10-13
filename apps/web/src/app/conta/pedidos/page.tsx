@@ -6,13 +6,13 @@ import { Button } from "@workspace/ui/components/button";
 import { AccountPageHeader } from "@/components/account/page-header";
 import { EmptyState } from "@/components/account/empty-state";
 import { OrderList } from "@/components/account/order-list";
-import { orders } from "@/data/account";
+import { getUserOrders } from "@/lib/customer-account";
 
 export const metadata: Metadata = { title: "Encomendas" };
 
 export default async function OrdersPage() {
-  await requireUser();
-  const sorted = [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const user = await requireUser();
+  const sorted = await getUserOrders(user.id);
 
   return (
     <>

@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Button } from "@workspace/ui/components/button";
 import { FormSection } from "@/components/account/form-section";
-import { PendingNotice } from "@/components/account/pending-notice";
 import { SelectField, TextField, TextareaField } from "@/components/account/fields";
+import { createSupportTicketAction, type ActionResult } from "@/app/conta/actions";
 import {
   SUPPORT_MESSAGE_MAX_LENGTH,
   SUPPORT_SUBJECT_MAX_LENGTH,
@@ -18,11 +17,13 @@ import {
 
 export function SupportRequestForm() {
   const [errors, setErrors] = React.useState<SupportRequestErrors>({});
-  const [submitted, setSubmitted] = React.useState(false);
+  const [result, setResult] = React.useState<ActionResult | null>(null);
+  const [pending, startTransition] = React.useTransition();
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const data = new FormData(form);
     const rawCategory = String(data.get("category") ?? "");
 
     const input: SupportRequestInput = {
@@ -33,15 +34,20 @@ export function SupportRequestForm() {
 
     const found = validateSupportRequest(input);
     setErrors(found);
-
     if (Object.keys(found).length > 0) {
-      setSubmitted(false);
+      setResult(null);
       return;
     }
 
-    // Frontend only: there is no ticket system or email service yet, so nothing is sent.
-    // TODO (integração futura): enviar `input` ao sistema de pedidos de suporte.
-    setSubmitted(true);
+    startTransition(async () => {
+      try {
+        const response = await createSupportTicketAction(input);
+        setResult(response);
+        if (response.ok) form.reset();
+      } catch {
+        setResult({ ok: false, error: "Não foi possível enviar o pedido. Tenta novamente." });
+      }
+    });
   }
 
   return (
@@ -51,7 +57,7 @@ export function SupportRequestForm() {
     >
       <form
         onSubmit={onSubmit}
-        onChange={() => setSubmitted(false)}
+        onChange={() => setResult(null)}
         noValidate
         className="flex flex-col gap-5"
       >
@@ -82,18 +88,15 @@ export function SupportRequestForm() {
           hint="Quanto mais detalhes, mais rápido conseguimos ajudar."
           error={errors.message}
         />
-        {submitted ? (
-          <PendingNotice>
-            O envio de pedidos ainda não está ativo. Entretanto, podes falar connosco através da
-            página de{" "}
-            <Link href="/contactos" className="font-medium text-foreground underline underline-offset-4">
-              contactos
-            </Link>
-            .
-          </PendingNotice>
+        {result ? (
+          <p role={result.ok ? "status" : "alert"} className="text-sm text-foreground">
+            {result.ok ? result.message : result.error}
+          </p>
         ) : null}
         <div>
-          <Button type="submit">Enviar pedido</Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "A enviar…" : "Enviar pedido"}
+          </Button>
         </div>
       </form>
     </FormSection>

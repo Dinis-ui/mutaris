@@ -19,6 +19,9 @@ export function isTicketStatus(value: unknown): value is SupportTicketStatus {
 
 export interface TicketDetail {
   ticket: AdminSupportTicket;
+  /** Tipo e mensagem do cliente (vazios nos pedidos antigos ou de demonstração). */
+  category: string | null;
+  message: string | null;
   /** ISO 8601 da última alteração. */
   updatedAt: string;
 }
@@ -38,6 +41,8 @@ export async function getTicketDetail(id: string): Promise<TicketDetail | null> 
       updatedAt: supportTickets.updatedAt,
       isDemo: supportTickets.isDemo,
       userId: supportTickets.userId,
+      category: supportTickets.category,
+      message: supportTickets.message,
       customerName: users.name,
     })
     .from(supportTickets)
@@ -58,6 +63,8 @@ export async function getTicketDetail(id: string): Promise<TicketDetail | null> 
       createdAt: row.createdAt.toISOString(),
       isDemo: row.isDemo,
     },
+    category: row.category,
+    message: row.message,
     updatedAt: row.updatedAt.toISOString(),
   };
 }

@@ -102,6 +102,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   /** Hash scrypt (`scrypt:<salt>:<hash>`). Vazio nas contas de demonstração: não podem entrar. */
   passwordHash: text("password_hash"),
+  phone: text("phone"),
   status: userStatus("status").default("pending").notNull(),
   isDemo: boolean("is_demo").default(false).notNull(),
   createdAt: createdAt(),
@@ -143,6 +144,9 @@ export const supportTickets = pgTable("support_tickets", {
   id: uuid("id").defaultRandom().primaryKey(),
   reference: text("reference").notNull().unique(),
   subject: text("subject").notNull(),
+  /** Tipo de pedido escolhido pelo cliente (ver `lib/support.ts`) e a mensagem. Vazios nos pedidos antigos/demo. */
+  category: text("category"),
+  message: text("message"),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   status: ticketStatus("status").default("open").notNull(),
   isDemo: boolean("is_demo").default(false).notNull(),

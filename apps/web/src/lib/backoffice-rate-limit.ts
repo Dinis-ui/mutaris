@@ -20,7 +20,7 @@ const MAX_FAILURES_PER_PAIR = 5;
 const MAX_FAILURES_PER_IP = 20;
 
 /** Cada âmbito tem os seus próprios contadores (admins, clientes, registos). */
-export type AttemptScope = "admin" | "customer" | "register";
+export type AttemptScope = "admin" | "customer" | "register" | "password";
 
 export interface LoginAttempt {
   ip: string;

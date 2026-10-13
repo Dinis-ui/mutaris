@@ -7,7 +7,7 @@ import { AccountPageHeader } from "@/components/account/page-header";
 import { EmptyState } from "@/components/account/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/account/status-badge";
 import { SupportRequestForm } from "@/components/account/support-request-form";
-import { supportTickets } from "@/data/account";
+import { getUserTickets } from "@/lib/customer-account";
 import { ticketStatusLabel } from "@/lib/account";
 import { formatDate } from "@/lib/format";
 import type { SupportTicketStatus } from "@workspace/types";
@@ -42,7 +42,8 @@ const helpLinks = [
 ];
 
 export default async function SupportPage() {
-  await requireUser();
+  const user = await requireUser();
+  const supportTickets = await getUserTickets(user.id);
   return (
     <>
       <AccountPageHeader

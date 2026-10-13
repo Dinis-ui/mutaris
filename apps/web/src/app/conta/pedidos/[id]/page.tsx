@@ -5,23 +5,20 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { OrderStatusBadge } from "@/components/account/order-list";
-import { getOrderById } from "@/lib/account";
+import { getUserOrder } from "@/lib/customer-account";
 import { formatDate, formatExactPrice } from "@/lib/format";
 
 interface OrderPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: OrderPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const order = getOrderById(id);
-  return { title: order ? `Encomenda n.º ${order.number}` : "Encomenda" };
-}
+export const metadata: Metadata = { title: "Encomenda" };
 
 export default async function OrderDetailPage({ params }: OrderPageProps) {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await params;
-  const order = getOrderById(id);
+  // Só devolve encomendas deste cliente.
+  const order = await getUserOrder(user.id, id);
 
   if (!order) notFound();
 
@@ -54,6 +51,11 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
             <CardTitle>Artigos</CardTitle>
           </CardHeader>
           <CardContent>
+            {order.items.length === 0 ? (
+              <p className="pb-4 text-sm text-muted-foreground">
+                O detalhe dos artigos desta encomenda ainda não está disponível nesta página.
+              </p>
+            ) : null}
             <ul className="divide-y divide-border">
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-start justify-between gap-4 py-4 first:pt-0">

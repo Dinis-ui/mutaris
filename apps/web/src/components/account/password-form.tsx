@@ -4,8 +4,8 @@ import * as React from "react";
 import { Button } from "@workspace/ui/components/button";
 import { FormSection } from "@/components/account/form-section";
 import { PasswordStrength } from "@/components/account/password-strength";
-import { PendingNotice } from "@/components/account/pending-notice";
 import { TextField } from "@/components/account/fields";
+import { changePasswordAction, type ActionResult } from "@/app/conta/actions";
 import { validatePasswordChange, type PasswordChangeErrors } from "@/lib/password";
 
 const fieldNames = {
@@ -19,12 +19,13 @@ export function PasswordForm() {
   const [next, setNext] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [errors, setErrors] = React.useState<PasswordChangeErrors>({});
-  const [submitted, setSubmitted] = React.useState(false);
+  const [result, setResult] = React.useState<ActionResult | null>(null);
+  const [pending, startTransition] = React.useTransition();
 
   function update(field: keyof PasswordChangeErrors, setValue: (value: string) => void) {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
       setValue(event.target.value);
-      setSubmitted(false);
+      setResult(null);
       setErrors((previous) => ({ ...previous, [field]: undefined }));
     };
   }
@@ -37,15 +38,28 @@ export function PasswordForm() {
 
     const firstInvalid = (["current", "next", "confirm"] as const).find((key) => found[key]);
     if (firstInvalid) {
-      setSubmitted(false);
+      setResult(null);
       const input = event.currentTarget.elements.namedItem(fieldNames[firstInvalid]);
       if (input instanceof HTMLElement) input.focus();
       return;
     }
 
-    // Frontend only: there is no authentication service yet, so nothing is sent.
-    // TODO (integração futura): enviar a alteração de palavra-passe ao serviço de autenticação.
-    setSubmitted(true);
+    startTransition(async () => {
+      try {
+        const response = await changePasswordAction({ current, next, confirm });
+        setResult(response);
+        if (response.ok) {
+          setCurrent("");
+          setNext("");
+          setConfirm("");
+          setErrors({});
+        } else if (response.fields) {
+          setErrors(response.fields as PasswordChangeErrors);
+        }
+      } catch {
+        setResult({ ok: false, error: "Não foi possível alterar a palavra-passe. Tenta novamente." });
+      }
+    });
   }
 
   const confirmHint =
@@ -90,14 +104,15 @@ export function PasswordForm() {
           hint={confirmHint}
           error={errors.confirm}
         />
-        {submitted ? (
-          <PendingNotice>
-            Ainda não é possível alterar a palavra-passe. Vamos avisar-te assim que esta opção
-            estiver disponível.
-          </PendingNotice>
+        {result ? (
+          <p role={result.ok ? "status" : "alert"} className="text-sm text-foreground">
+            {result.ok ? result.message : result.error}
+          </p>
         ) : null}
         <div>
-          <Button type="submit">Alterar palavra-passe</Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "A alterar…" : "Alterar palavra-passe"}
+          </Button>
         </div>
       </form>
     </FormSection>

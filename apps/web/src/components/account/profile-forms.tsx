@@ -5,6 +5,7 @@ import { Button } from "@workspace/ui/components/button";
 import { FormSection } from "@/components/account/form-section";
 import { PendingNotice } from "@/components/account/pending-notice";
 import { TextField } from "@/components/account/fields";
+import { updateProfileAction, type ActionResult } from "@/app/conta/actions";
 import type { CustomerProfile } from "@workspace/types";
 
 const notice =
@@ -21,17 +22,34 @@ function useSubmitNotice() {
 }
 
 export function PersonalDataForm({ profile }: { profile: CustomerProfile }) {
-  const { submitted, onSubmit } = useSubmitNotice();
+  const [pending, startTransition] = React.useTransition();
+  const [result, setResult] = React.useState<ActionResult | null>(null);
+
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const input = { name: String(data.get("name") ?? ""), phone: String(data.get("phone") ?? "") };
+    startTransition(async () => {
+      try {
+        setResult(await updateProfileAction(input));
+      } catch {
+        setResult({ ok: false, error: "Não foi possível guardar. Tenta novamente." });
+      }
+    });
+  }
+
+  const fields = result && !result.ok ? result.fields : undefined;
 
   return (
     <FormSection title="Dados pessoais" description="Estes dados são usados nas tuas encomendas e no contacto connosco.">
-      <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <form onSubmit={onSubmit} onChange={() => setResult(null)} className="flex flex-col gap-5">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <TextField
             label="Nome completo"
             name="name"
             autoComplete="name"
             defaultValue={profile.fullName}
+            error={fields?.name}
             className="md:col-span-2"
           />
           <TextField
@@ -40,6 +58,8 @@ export function PersonalDataForm({ profile }: { profile: CustomerProfile }) {
             type="email"
             autoComplete="email"
             defaultValue={profile.email}
+            readOnly
+            hint="Para alterar o email, fala com o suporte."
           />
           <TextField
             label="Telefone"
@@ -47,11 +67,18 @@ export function PersonalDataForm({ profile }: { profile: CustomerProfile }) {
             type="tel"
             autoComplete="tel"
             defaultValue={profile.phone}
+            error={fields?.phone}
           />
         </div>
-        {submitted ? <PendingNotice>{notice}</PendingNotice> : null}
+        {result ? (
+          <p role={result.ok ? "status" : "alert"} className="text-sm text-foreground">
+            {result.ok ? result.message : result.error}
+          </p>
+        ) : null}
         <div>
-          <Button type="submit">Guardar alterações</Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "A guardar…" : "Guardar alterações"}
+          </Button>
         </div>
       </form>
     </FormSection>
