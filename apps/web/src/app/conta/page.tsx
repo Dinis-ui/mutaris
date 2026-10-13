@@ -7,12 +7,12 @@ import { AccountPageHeader } from "@/components/account/page-header";
 import { EmptyState } from "@/components/account/empty-state";
 import { OrderList } from "@/components/account/order-list";
 import {
-  customerProfile,
   favoriteProducts,
   orders,
   ownedSolutions,
   supportTickets,
 } from "@/data/account";
+import { requireUser } from "@/lib/customer-session-server";
 import { iconRegistry } from "@/lib/icons";
 import type { IconName } from "@workspace/types";
 
@@ -43,7 +43,9 @@ const shortcuts: { label: string; description: string; href: string; icon: IconN
   },
 ];
 
-export default function AccountPage() {
+export default async function AccountPage() {
+  const user = await requireUser();
+  const firstName = user.name.split(" ")[0] ?? user.name;
   const activeSolutions = ownedSolutions.filter((item) => item.status === "active").length;
   const openTickets = supportTickets.filter((ticket) => ticket.status !== "resolved").length;
   const recentOrders = [...orders]
@@ -60,7 +62,7 @@ export default function AccountPage() {
   return (
     <>
       <AccountPageHeader
-        title={`Olá, ${customerProfile.firstName}`}
+        title={`Olá, ${firstName}`}
         description="Aqui tens tudo o que precisas para acompanhar as tuas encomendas, gerir as tuas soluções e pedir ajuda."
       />
 

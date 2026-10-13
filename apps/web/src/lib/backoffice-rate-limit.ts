@@ -19,17 +19,21 @@ const WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILURES_PER_PAIR = 5;
 const MAX_FAILURES_PER_IP = 20;
 
+/** Cada âmbito tem os seus próprios contadores (admins, clientes, registos). */
+export type AttemptScope = "admin" | "customer" | "register";
+
 export interface LoginAttempt {
   ip: string;
   email: string;
+  scope?: AttemptScope;
 }
 
 function hashKey(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function keysFor({ ip, email }: LoginAttempt) {
-  return { pair: hashKey(`pair|${ip}|${email}`), ip: hashKey(`ip|${ip}`) };
+function keysFor({ ip, email, scope = "admin" }: LoginAttempt) {
+  return { pair: hashKey(`pair|${scope}|${ip}|${email}`), ip: hashKey(`ip|${scope}|${ip}`) };
 }
 
 async function countSince(keyHash: string): Promise<number> {

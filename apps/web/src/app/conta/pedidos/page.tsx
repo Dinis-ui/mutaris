@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/customer-session-server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Package } from "lucide-react";
@@ -9,7 +10,8 @@ import { orders } from "@/data/account";
 
 export const metadata: Metadata = { title: "Encomendas" };
 
-export default function OrdersPage() {
+export default async function OrdersPage() {
+  await requireUser();
   const sorted = [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (

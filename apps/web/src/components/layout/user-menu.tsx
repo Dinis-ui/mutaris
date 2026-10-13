@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { User } from "lucide-react";
 import { accountMenuNav } from "@/config/navigation";
 import { iconRegistry } from "@/lib/icons";
@@ -13,7 +13,11 @@ const itemClasses =
 
 export function UserMenu() {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  // null = ainda a verificar. As páginas públicas continuam estáticas: o
+  // estado da sessão vem de um pedido pequeno feito aqui, no browser.
+  const [signedIn, setSignedIn] = React.useState<boolean | null>(null);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -24,6 +28,22 @@ export function UserMenu() {
     () => Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []),
     [],
   );
+
+  // Verifica a sessão ao montar e a cada navegação (entrar/sair mudam o estado).
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch("/api/conta-sessao", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!cancelled) setSignedIn(Boolean(data?.signedIn));
+      })
+      .catch(() => {
+        if (!cancelled) setSignedIn(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   // Move focus into the menu when it opens.
   React.useEffect(() => {
@@ -78,10 +98,29 @@ export function UserMenu() {
     if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
   }
 
-  function signOut() {
+  async function signOut() {
     close();
-    // Frontend only: there is no session to end yet, so just return to the home page.
+    try {
+      await fetch("/api/conta-sair", { method: "POST" });
+    } catch {
+      // Se o pedido falhar, a sessão continua válida até expirar; o utilizador pode tentar de novo.
+    }
+    setSignedIn(false);
     router.push("/");
+    router.refresh();
+  }
+
+  // Sem sessão (ou ainda a verificar): o ícone leva ao login / à área de cliente.
+  if (signedIn !== true) {
+    return (
+      <Link
+        href={signedIn === false ? "/entrar" : "/conta"}
+        aria-label={signedIn === false ? "Entrar" : "Conta"}
+        className="hidden h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+      >
+        <User aria-hidden="true" className="h-5 w-5" />
+      </Link>
+    );
   }
 
   return (

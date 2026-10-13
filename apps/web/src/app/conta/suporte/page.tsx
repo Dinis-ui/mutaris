@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/customer-session-server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpen, CircleHelp, LifeBuoy, MessageSquare } from "lucide-react";
@@ -40,7 +41,8 @@ const helpLinks = [
   },
 ];
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  await requireUser();
   return (
     <>
       <AccountPageHeader

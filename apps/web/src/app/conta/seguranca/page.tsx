@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/customer-session-server";
 import type { Metadata } from "next";
 import { Monitor } from "lucide-react";
 import { AccountPageHeader } from "@/components/account/page-header";
@@ -10,7 +11,8 @@ import { sessionDevices } from "@/data/account";
 
 export const metadata: Metadata = { title: "Segurança" };
 
-export default function SecurityPage() {
+export default async function SecurityPage() {
+  await requireUser();
   return (
     <>
       <AccountPageHeader

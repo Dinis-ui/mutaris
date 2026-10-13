@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/customer-session-server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Boxes } from "lucide-react";
@@ -18,7 +19,8 @@ const statusTone: Record<OwnedSolutionStatus, StatusTone> = {
   "needs-attention": "attention",
 };
 
-export default function SolutionsPage() {
+export default async function SolutionsPage() {
+  await requireUser();
   return (
     <>
       <AccountPageHeader

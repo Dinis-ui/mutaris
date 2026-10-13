@@ -100,8 +100,24 @@ export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  /** Hash scrypt (`scrypt:<salt>:<hash>`). Vazio nas contas de demonstração: não podem entrar. */
+  passwordHash: text("password_hash"),
   status: userStatus("status").default("pending").notNull(),
   isDemo: boolean("is_demo").default(false).notNull(),
+  createdAt: createdAt(),
+});
+
+/**
+ * Sessões dos clientes (mesmo esquema das do backoffice: o cookie guarda um
+ * token aleatório e aqui fica só o hash SHA-256 dele).
+ */
+export const userSessions = pgTable("user_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: createdAt(),
 });
 

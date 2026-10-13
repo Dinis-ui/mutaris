@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/customer-session-server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,6 +19,7 @@ export async function generateMetadata({ params }: OrderPageProps): Promise<Meta
 }
 
 export default async function OrderDetailPage({ params }: OrderPageProps) {
+  await requireUser();
   const { id } = await params;
   const order = getOrderById(id);
 

@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/customer-session-server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Heart } from "lucide-react";
@@ -11,7 +12,8 @@ import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Favoritos" };
 
-export default function FavoritesPage() {
+export default async function FavoritesPage() {
+  await requireUser();
   return (
     <>
       <AccountPageHeader

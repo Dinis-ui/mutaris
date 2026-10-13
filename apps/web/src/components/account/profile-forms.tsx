@@ -64,6 +64,9 @@ export function AddressesForm({ profile }: { profile: CustomerProfile }) {
   return (
     <FormSection title="Moradas" description="As moradas onde podes receber as tuas encomendas.">
       <form onSubmit={onSubmit} className="flex flex-col gap-6">
+        {profile.addresses.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Ainda não tens moradas guardadas.</p>
+        ) : null}
         {profile.addresses.map((address) => (
           <fieldset
             key={address.id}
