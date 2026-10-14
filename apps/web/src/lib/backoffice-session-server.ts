@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { and, eq, gt, isNull, lt } from "drizzle-orm";
+import { and, eq, gt, isNull, lt, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { adminSessions, admins } from "@/db/schema";
 import { BACKOFFICE_SESSION_COOKIE, BACKOFFICE_SESSION_MAX_AGE } from "@/lib/backoffice-auth";
@@ -36,6 +36,24 @@ export async function createAdminSession(adminId: string): Promise<string> {
   await db.delete(adminSessions).where(lt(adminSessions.expiresAt, new Date()));
 
   return token;
+}
+
+/** Hash do token da sessão atual (para a distinguir das outras), ou null. */
+export async function getCurrentAdminSessionHash(): Promise<string | null> {
+  const store = await cookies();
+  const token = store.get(BACKOFFICE_SESSION_COOKIE)?.value;
+  return token ? hashToken(token) : null;
+}
+
+/** Termina todas as sessões de um administrador (menos a indicada, se houver). */
+export async function revokeAdminSessions(
+  adminId: string,
+  keepSessionHash: string | null = null,
+): Promise<void> {
+  const condition = keepSessionHash
+    ? and(eq(adminSessions.adminId, adminId), ne(adminSessions.tokenHash, keepSessionHash))
+    : eq(adminSessions.adminId, adminId);
+  await getDb().delete(adminSessions).where(condition);
 }
 
 /** Termina a sessão deste token (se existir). */

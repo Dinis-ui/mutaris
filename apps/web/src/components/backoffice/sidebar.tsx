@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, KeyRound, LogOut } from "lucide-react";
 import { backofficeNav } from "@/config/navigation";
 import { iconRegistry } from "@/lib/icons";
 import { Logo } from "@/components/layout/logo";
@@ -77,6 +77,13 @@ export function BackofficeSidebar({ adminName }: { adminName?: string }) {
             Sessão iniciada como <span className="font-medium text-foreground">{adminName}</span>
           </p>
         ) : null}
+        <Link
+          href="/backoffice/conta"
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <KeyRound aria-hidden="true" className="h-4 w-4" />
+          A minha palavra-passe
+        </Link>
         <Link
           href="/"
           className="hidden items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground lg:flex"

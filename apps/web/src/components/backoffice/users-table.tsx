@@ -139,8 +139,8 @@ export function BackofficeUsersTable({ users }: { users: AdminUser[] }) {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Suspender e reativar guardam o estado na base de dados. Ainda não bloqueia o
-        acesso: as contas de cliente ainda não estão ligadas à autenticação.
+        Suspender bloqueia o acesso do cliente à sua conta de imediato (a sessão deixa de ser
+        válida). Reativar devolve-lhe o acesso.
       </p>
     </div>
   );

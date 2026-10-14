@@ -38,6 +38,7 @@ export const accountMenuNav: AccountNavLink[] = [
   { label: "Suporte", href: "/conta/suporte", icon: "life-buoy" },
   { label: "Definições", href: "/conta/dados", icon: "settings" },
 ];
+
 /** Sidebar do backoffice (administração interna). */
 export const backofficeNav: AccountNavLink[] = [
   { label: "Dashboard", href: "/backoffice", icon: "layout-dashboard" },
@@ -45,4 +46,5 @@ export const backofficeNav: AccountNavLink[] = [
   { label: "Suporte", href: "/backoffice/suporte", icon: "life-buoy" },
   { label: "Loja", href: "/backoffice/loja", icon: "store" },
   { label: "Encomendas", href: "/backoffice/encomendas", icon: "package" },
+  { label: "Administradores", href: "/backoffice/administradores", icon: "shield-check" },
 ];

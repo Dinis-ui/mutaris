@@ -8,6 +8,11 @@ import type { ActivityTone } from "@/data/backoffice-dashboard";
 export type ActivityAction =
   | "admin.login"
   | "admin.logout"
+  | "admin.created"
+  | "admin.disabled"
+  | "admin.enabled"
+  | "admin.password_reset"
+  | "admin.password_changed"
   | "user.suspended"
   | "user.reactivated"
   | "ticket.status_changed"
@@ -19,6 +24,11 @@ export type ActivityAction =
 export const ACTIVITY_ACTIONS: Record<string, { title: string; tone: ActivityTone }> = {
   "admin.login": { title: "Início de sessão", tone: "neutral" },
   "admin.logout": { title: "Sessão terminada", tone: "neutral" },
+  "admin.created": { title: "Administrador criado", tone: "positive" },
+  "admin.disabled": { title: "Administrador desativado", tone: "attention" },
+  "admin.enabled": { title: "Administrador reativado", tone: "positive" },
+  "admin.password_reset": { title: "Palavra-passe de administrador reposta", tone: "attention" },
+  "admin.password_changed": { title: "Palavra-passe alterada", tone: "neutral" },
   "user.suspended": { title: "Utilizador suspenso", tone: "attention" },
   "user.reactivated": { title: "Utilizador reativado", tone: "positive" },
   "ticket.status_changed": { title: "Pedido de suporte atualizado", tone: "neutral" },
