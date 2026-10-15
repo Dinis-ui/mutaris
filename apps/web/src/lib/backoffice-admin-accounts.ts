@@ -1,6 +1,7 @@
 import { and, asc, count, eq, isNull, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { admins } from "@/db/schema";
+import { isAdminRole, type AdminRole } from "@/lib/admin-permissions";
 import { requireAdmin, revokeAdminSessions } from "@/lib/backoffice-session-server";
 import { hashPassword, verifyPassword } from "@/lib/password-hash";
 
@@ -15,6 +16,7 @@ export interface AdminListItem {
   id: string;
   name: string;
   email: string;
+  role: AdminRole;
   disabled: boolean;
   createdAt: string;
   /** True para a conta do administrador que está a ver a página. */
@@ -22,12 +24,13 @@ export interface AdminListItem {
 }
 
 export async function listAdmins(): Promise<AdminListItem[]> {
-  const current = await requireAdmin();
+  const current = await requireAdmin("admins");
   const rows = await getDb()
     .select({
       id: admins.id,
       name: admins.name,
       email: admins.email,
+      role: admins.role,
       disabledAt: admins.disabledAt,
       createdAt: admins.createdAt,
     })
@@ -38,6 +41,7 @@ export async function listAdmins(): Promise<AdminListItem[]> {
     id: row.id,
     name: row.name,
     email: row.email,
+    role: row.role,
     disabled: row.disabledAt !== null,
     createdAt: row.createdAt.toISOString(),
     isSelf: row.id === current.id,
@@ -50,13 +54,14 @@ export async function createAdmin(input: {
   name: string;
   email: string;
   password: string;
+  role: AdminRole;
 }): Promise<CreateAdminResult> {
-  await requireAdmin();
+  await requireAdmin("admins");
   const passwordHash = await hashPassword(input.password);
 
   const [row] = await getDb()
     .insert(admins)
-    .values({ name: input.name, email: input.email, passwordHash })
+    .values({ name: input.name, email: input.email, passwordHash, role: input.role })
     .onConflictDoNothing({ target: admins.email })
     .returning({ name: admins.name });
 
@@ -70,7 +75,7 @@ export type SetDisabledResult =
 
 /** Desativa ou reativa um administrador. Desativar termina-lhe as sessões. */
 export async function setAdminDisabled(id: string, disabled: boolean): Promise<SetDisabledResult> {
-  const current = await requireAdmin();
+  const current = await requireAdmin("admins");
   if (!UUID_PATTERN.test(id)) return { ok: false, error: "Administrador não encontrado." };
 
   const db = getDb();
@@ -82,9 +87,9 @@ export async function setAdminDisabled(id: string, disabled: boolean): Promise<S
     const [others] = await db
       .select({ value: count() })
       .from(admins)
-      .where(and(ne(admins.id, id), isNull(admins.disabledAt)));
+      .where(and(ne(admins.id, id), isNull(admins.disabledAt), eq(admins.role, "full")));
     if ((others?.value ?? 0) < 1) {
-      return { ok: false, error: "Tem de existir pelo menos um administrador ativo." };
+      return { ok: false, error: "Tem de existir pelo menos um administrador ativo com perfil total." };
     }
   }
 
@@ -99,12 +104,42 @@ export async function setAdminDisabled(id: string, disabled: boolean): Promise<S
   return { ok: true, name: row.name };
 }
 
+export type SetRoleResult = { ok: true; name: string; role: AdminRole } | { ok: false; error: string };
+
+/** Muda o perfil de um administrador. O perfil é lido a cada pedido, por isso vale de imediato. */
+export async function setAdminRole(id: string, role: string): Promise<SetRoleResult> {
+  const current = await requireAdmin("admins");
+  if (!UUID_PATTERN.test(id)) return { ok: false, error: "Administrador não encontrado." };
+  if (!isAdminRole(role)) return { ok: false, error: "Perfil inválido." };
+  if (id === current.id) return { ok: false, error: "Não podes mudar o teu próprio perfil." };
+
+  const db = getDb();
+  if (role !== "full") {
+    // Tem de sobrar pelo menos um administrador ativo com perfil total.
+    const [others] = await db
+      .select({ value: count() })
+      .from(admins)
+      .where(and(ne(admins.id, id), isNull(admins.disabledAt), eq(admins.role, "full")));
+    if ((others?.value ?? 0) < 1) {
+      return { ok: false, error: "Tem de existir pelo menos um administrador ativo com perfil total." };
+    }
+  }
+
+  const [row] = await db
+    .update(admins)
+    .set({ role })
+    .where(eq(admins.id, id))
+    .returning({ name: admins.name });
+  if (!row) return { ok: false, error: "Administrador não encontrado." };
+  return { ok: true, name: row.name, role };
+}
+
 /** Define uma password nova para outro administrador e termina-lhe as sessões. */
 export async function resetAdminPassword(
   id: string,
   newPassword: string,
 ): Promise<SetDisabledResult> {
-  await requireAdmin();
+  await requireAdmin("admins");
   if (!UUID_PATTERN.test(id)) return { ok: false, error: "Administrador não encontrado." };
 
   const [row] = await getDb()

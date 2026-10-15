@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { FORBIDDEN_MESSAGE, roleHasPermission } from "@/lib/admin-permissions";
 import { requireAdmin } from "@/lib/backoffice-session-server";
 import { recordActivity } from "@/lib/audit";
 import { createProduct, deleteProduct, updateProduct } from "@/lib/backoffice-products";
@@ -21,7 +22,10 @@ function revalidateStore() {
  * validamos tudo o que vem do cliente.
  */
 export async function saveProductAction(formData: FormData): Promise<ProductFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!roleHasPermission(admin.role, "manage")) {
+    return { status: "error", message: FORBIDDEN_MESSAGE };
+  }
 
   const rawId = formData.get("id");
   const id = typeof rawId === "string" && rawId ? rawId : null;
@@ -58,7 +62,8 @@ export async function saveProductAction(formData: FormData): Promise<ProductForm
 export type DeleteProductResult = { ok: true } | { ok: false; error: string };
 
 export async function deleteProductAction(productId: string): Promise<DeleteProductResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!roleHasPermission(admin.role, "manage")) return { ok: false, error: FORBIDDEN_MESSAGE };
   if (typeof productId !== "string") return { ok: false, error: "Pedido inválido." };
 
   try {

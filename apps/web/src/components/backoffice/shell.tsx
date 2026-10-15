@@ -12,9 +12,13 @@ import { BackofficeSidebar } from "@/components/backoffice/sidebar";
 export function BackofficeShell({
   children,
   adminName,
+  roleLabel,
+  canManageAdmins,
 }: {
   children: React.ReactNode;
   adminName?: string;
+  roleLabel?: string;
+  canManageAdmins: boolean;
 }) {
   const pathname = usePathname();
   const isLogin = pathname === "/backoffice/login";
@@ -26,7 +30,11 @@ export function BackofficeShell({
   return (
     <Container className="grid grid-cols-1 gap-8 py-10 md:py-14 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
       <aside className="min-w-0 lg:sticky lg:top-10 lg:self-start">
-        <BackofficeSidebar adminName={adminName} />
+        <BackofficeSidebar
+          adminName={adminName}
+          roleLabel={roleLabel}
+          canManageAdmins={canManageAdmins}
+        />
       </aside>
       <div className="flex min-w-0 flex-col gap-10">{children}</div>
     </Container>

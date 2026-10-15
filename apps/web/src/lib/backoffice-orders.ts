@@ -62,7 +62,7 @@ export async function getOrderDetail(id: string): Promise<AdminOrder | null> {
 
 /** Altera o estado da encomenda. Devolve o número, ou null se não existir. */
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<string | null> {
-  await requireAdmin();
+  await requireAdmin("manage");
   if (!isUuid(id)) return null;
 
   const [updated] = await getDb()

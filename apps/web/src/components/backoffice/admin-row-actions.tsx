@@ -4,8 +4,10 @@ import * as React from "react";
 import { Button } from "@workspace/ui/components/button";
 import { PasswordStrength } from "@/components/account/password-strength";
 import { TextField } from "@/components/account/fields";
+import { ADMIN_ROLES, ADMIN_ROLE_LABELS, type AdminRole } from "@/lib/admin-permissions";
 import {
   resetAdminPasswordAction,
+  setAdminRoleAction,
   setAdminDisabledAction,
   type AdminActionResult,
 } from "@/app/backoffice/administradores/actions";
@@ -15,10 +17,12 @@ export function AdminRowActions({
   id,
   name,
   disabled,
+  role,
 }: {
   id: string;
   name: string;
   disabled: boolean;
+  role: AdminRole;
 }) {
   const [pending, startTransition] = React.useTransition();
   const [confirming, setConfirming] = React.useState(false);
@@ -45,6 +49,17 @@ export function AdminRowActions({
     });
   }
 
+  function changeRole(next: string) {
+    setResult(null);
+    startTransition(async () => {
+      try {
+        setResult(await setAdminRoleAction(id, next));
+      } catch {
+        setResult({ ok: false, error: "Não foi possível guardar. Tenta novamente." });
+      }
+    });
+  }
+
   function submitReset(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setResult(null);
@@ -64,8 +79,27 @@ export function AdminRowActions({
 
   return (
     <div className="flex flex-col items-end gap-2">
-      <div className="flex gap-1">
-        <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => setResetting((v) => !v)}>
+      <div className="flex flex-wrap items-center justify-end gap-1">
+        <select
+          aria-label={`Perfil de ${name}`}
+          value={role}
+          disabled={pending}
+          onChange={(event) => changeRole(event.target.value)}
+          className="h-9 rounded-md border border-border bg-background px-2 text-sm"
+        >
+          {ADMIN_ROLES.map((option) => (
+            <option key={option} value={option}>
+              {ADMIN_ROLE_LABELS[option]}
+            </option>
+          ))}
+        </select>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={pending}
+          onClick={() => setResetting((v) => !v)}
+        >
           {resetting ? "Cancelar" : "Repor palavra-passe"}
         </Button>
         <Button
@@ -75,11 +109,21 @@ export function AdminRowActions({
           disabled={pending}
           onClick={toggle}
         >
-          {pending ? "A guardar…" : disabled ? "Reativar" : confirming ? "Confirmar?" : "Desativar"}
+          {pending
+            ? "A guardar…"
+            : disabled
+              ? "Reativar"
+              : confirming
+                ? "Confirmar?"
+                : "Desativar"}
         </Button>
       </div>
       {resetting ? (
-        <form onSubmit={submitReset} noValidate className="flex w-full max-w-sm flex-col gap-3 text-left">
+        <form
+          onSubmit={submitReset}
+          noValidate
+          className="flex w-full max-w-sm flex-col gap-3 text-left"
+        >
           <TextField
             label={`Nova palavra-passe para ${name}`}
             name={`reset-${id}`}
@@ -97,7 +141,10 @@ export function AdminRowActions({
         </form>
       ) : null}
       {result ? (
-        <p role={result.ok ? "status" : "alert"} className="max-w-xs text-xs text-muted-foreground">
+        <p
+          role={result.ok ? "status" : "alert"}
+          className="max-w-xs text-xs text-muted-foreground"
+        >
           {result.ok ? result.message : result.error}
         </p>
       ) : null}

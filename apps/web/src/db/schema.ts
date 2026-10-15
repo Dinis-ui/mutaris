@@ -37,6 +37,9 @@ export const productAvailability = pgEnum("product_availability", [
   "brevemente",
 ]);
 
+/** Perfil de permissões dos administradores (ver lib/admin-permissions.ts). */
+export const adminRole = pgEnum("admin_role", ["read", "support", "full"]);
+
 const createdAt = () => timestamp("created_at", { withTimezone: true }).defaultNow().notNull();
 
 /** Contas de administrador do backoffice. `passwordHash`: scrypt:<salt>:<hash>. */
@@ -45,6 +48,8 @@ export const admins = pgTable("admins", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
+  /** Contas existentes ficam `full` (acesso que já tinham). */
+  role: adminRole("role").default("full").notNull(),
   /** Preenchido para desativar uma conta sem a apagar. */
   disabledAt: timestamp("disabled_at", { withTimezone: true }),
   createdAt: createdAt(),

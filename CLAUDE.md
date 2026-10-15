@@ -46,6 +46,7 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 - **A validação real fica junto dos dados:** `requireAdmin()` em todas as funções/ações do backoffice e `requireUser()` em todas as páginas `/conta`. O `proxy.ts` só verifica a *presença* do cookie.
 - Limite de tentativas de login na BD (`lib/backoffice-rate-limit.ts`, tabela `login_failures`): janela 15 min, 5 por IP+identificador e 20 por IP; chaves com âmbito (`admin`, `customer`, `register`, `password`). IP vem de `x-forwarded-for` (de confiança na Vercel).
 - Suspender um cliente bloqueia o acesso de imediato.
+- **Perfis de administrador** (`admins.role`, `lib/admin-permissions.ts`): `read` (Leitura: só vê), `support` (Suporte: + pedidos de suporte), `full` (Total: tudo, incl. loja, encomendas, clientes e administradores). Permissões: `view`, `support`, `manage`, `admins`. `requireAdmin("permissão")` redireciona para `/backoffice/sem-permissao`; Server Actions devolvem erro (`FORBIDDEN_MESSAGE`). O perfil é lido a cada pedido (efeito imediato). Contas antigas ficaram `full`; tem de haver sempre um `full` ativo. Ao criar uma função/ação de escrita nova, escolher a permissão certa.
 
 ### Padrão de Server Action
 `"use server"` → `requireAdmin()`/`requireUser()` → **validar de novo os argumentos** (vêm do cliente) → `try/catch` → `recordActivity(...)` (registo de auditoria, não falha a ação) → `revalidatePath`. Componentes de cliente usam `useTransition`; formulários com `onSubmit` + `startTransition` para evitar o reset de formulário do React 19.
@@ -57,10 +58,10 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 - Auditoria: `lib/audit.ts` (`recordActivity`) e `lib/audit-actions.ts` (lista de ações e títulos); histórico em `/backoffice/atividade`.
 
 ## Estado atual
-**Feito:** site público; contas de cliente (registo, login, sessões, perfil, palavra-passe, pedidos, pedidos de suporte); backoffice (utilizadores, suporte, loja com imagens, encomendas, administradores, a minha conta, histórico de atividade); deploy na Vercel com Neon de produção; testes Vitest; SEO base; textos legais reescritos (com marcadores).
+**Feito:** site público; contas de cliente (registo, login, sessões, perfil, palavra-passe, pedidos, pedidos de suporte); backoffice (utilizadores, suporte, loja com imagens, encomendas, administradores com perfis de permissões, a minha conta, histórico de atividade); deploy na Vercel com Neon de produção; testes Vitest; SEO base; textos legais reescritos (com marcadores).
 
 **Por fazer / decisões do dono em aberto:**
-1. **Perfis de permissões de administrador** (por exemplo `leitura`, `suporte`, `total`) — todos os admins têm hoje acesso total. Pré-requisito para dar uma conta a um agente de IA (só de leitura primeiro; ações que mexem em dinheiro/clientes só com aprovação humana).
+1. Dar uma conta a um agente de IA: criar um administrador com perfil **Leitura** em `/backoffice/administradores` (ações que mexem em dinheiro/clientes só com aprovação humana).
 2. Encomendas completas: itens, morada de envio, carrinho/checkout. Bloqueado por: fornecedor de pagamentos, portes, IVA.
 3. Email (verificação, recuperação de palavra-passe, notificações) — precisa de domínio.
 4. Preencher os marcadores dos textos legais; Livro de Reclamações/RAL.

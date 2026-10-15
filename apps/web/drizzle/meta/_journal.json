@@ -43,6 +43,13 @@
       "when": 1791885292198,
       "tag": "0005_dazzling_valkyrie",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792084239254,
+      "tag": "0006_opposite_firedrake",
+      "breakpoints": true
     }
   ]
 }

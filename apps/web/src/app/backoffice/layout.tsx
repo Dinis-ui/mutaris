@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BackofficeShell } from "@/components/backoffice/shell";
+import { ADMIN_ROLE_LABELS, roleHasPermission } from "@/lib/admin-permissions";
 import { getCurrentAdmin } from "@/lib/backoffice-session-server";
 
 export const metadata: Metadata = {
@@ -20,5 +21,10 @@ export const metadata: Metadata = {
  */
 export default async function BackofficeLayout({ children }: { children: React.ReactNode }) {
   const admin = await getCurrentAdmin();
-  return <BackofficeShell adminName={admin?.name}>{children}</BackofficeShell>;
+  return <BackofficeShell
+      adminName={admin?.name}
+      roleLabel={admin ? ADMIN_ROLE_LABELS[admin.role] : undefined}
+      canManageAdmins={admin ? roleHasPermission(admin.role, "admins") : false}
+    >{children}
+    </BackofficeShell>;
 }
