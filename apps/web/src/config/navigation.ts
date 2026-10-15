@@ -47,4 +47,5 @@ export const backofficeNav: AccountNavLink[] = [
   { label: "Loja", href: "/backoffice/loja", icon: "store" },
   { label: "Encomendas", href: "/backoffice/encomendas", icon: "package" },
   { label: "Administradores", href: "/backoffice/administradores", icon: "shield-check" },
+  { label: "Atividade", href: "/backoffice/atividade", icon: "search" },
 ];

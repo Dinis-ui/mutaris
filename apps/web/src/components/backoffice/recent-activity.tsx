@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { cn } from "@workspace/ui/lib/cn";
 import { getRecentActivity } from "@/lib/backoffice";
@@ -38,6 +39,12 @@ export async function BackofficeRecentActivity() {
             </li>
           ))}
         </ul>
+        <Link
+          href="/backoffice/atividade"
+          className="mt-5 inline-block text-sm font-medium text-foreground underline underline-offset-4"
+        >
+          Ver todo o histórico
+        </Link>
       </CardContent>
     </Card>
   );
