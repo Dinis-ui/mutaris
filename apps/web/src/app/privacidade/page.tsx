@@ -23,152 +23,248 @@ export default function PrivacyPage() {
         </header>
 
         <div className="flex max-w-3xl flex-col gap-10">
-          <LegalSection title="1. Introdução">
+          <LegalSection title="1. Âmbito e responsável pelo tratamento">
             <p>
-              Esta Política de Privacidade explica como a {siteConfig.name} (“nós”, “a nossa
-              empresa”) recolhe, utiliza, partilha e protege os dados pessoais das pessoas que
-              visitam este site ou utilizam os nossos serviços.
+              A presente Política de Privacidade descreve a forma como a {siteConfig.name}
+              (“Responsável pelo Tratamento”, “nós”) recolhe, utiliza, conserva e protege os dados
+              pessoais das pessoas que visitam este website ou utilizam a respetiva área de
+              cliente (“Utilizador”), em conformidade com o Regulamento Geral sobre a Proteção de
+              Dados (RGPD – Regulamento (UE) 2016/679) e a legislação nacional aplicável.
             </p>
             <p>
-              Alguns conteúdos e funcionalidades descritos nesta política — como criação de conta,
-              encomendas, pagamentos ou histórico de pedidos de suporte — ainda estão em
-              desenvolvimento e podem não estar totalmente disponíveis no site neste momento. Esta
-              política descreve também o que acontecerá quando essas funcionalidades forem
-              lançadas, e será atualizada sempre que necessário.
+              Responsável pelo tratamento: [NOME DA EMPRESA / EMPRESÁRIO EM NOME INDIVIDUAL],
+              NIF [NIF], com sede em [MORADA DA EMPRESA].
             </p>
             <p>
-              Ao utilizares este site, aceitas as práticas aqui descritas. Se tiveres dúvidas,
-              podes contactar-nos através dos meios indicados na secção “Contacto”.
+              As funcionalidades de criação de conta, área de cliente e pedidos de suporte estão
+              disponíveis. A compra de produtos com pagamento e entrega online ainda não se
+              encontra disponível; esta política será atualizada quando esta funcionalidade for
+              lançada, nomeadamente quanto aos dados de faturação, pagamento e entrega.
             </p>
           </LegalSection>
 
-          <LegalSection title="2. Que dados podemos recolher">
-            <p>Dependendo de como utilizas o site, podemos recolher, entre outros, os seguintes tipos de dados:</p>
+          <LegalSection title="2. Dados pessoais tratados">
+            <p>Consoante a utilização do website, tratamos as seguintes categorias de dados:</p>
             <ul className="flex list-disc flex-col gap-2 pl-5">
               <li>
-                Dados de identificação e contacto, como nome, email e número de telefone, quando
-                os forneces através de um formulário (por exemplo, um pedido de suporte);
+                <strong className="font-medium text-foreground">Dados de conta:</strong> nome,
+                endereço de email e palavra-passe. A palavra-passe nunca é guardada em texto:
+                conservamos apenas um código criptográfico irreversível (hash);
               </li>
               <li>
-                Dados de morada e faturação, quando necessários para processar uma encomenda ou
-                emitir uma fatura;
+                <strong className="font-medium text-foreground">Dados de perfil:</strong> número
+                de telefone, se o Utilizador optar por o indicar;
               </li>
               <li>
-                Dados de conta, caso venhas a criar uma conta no site;
+                <strong className="font-medium text-foreground">Pedidos de suporte:</strong>{" "}
+                categoria, assunto, mensagem e estado do pedido, bem como as respostas a esses
+                pedidos;
               </li>
               <li>
-                Dados de navegação, como páginas visitadas ou tipo de dispositivo, recolhidos de
-                forma automática através de cookies e tecnologias semelhantes (ver secção
-                “Cookies”);
+                <strong className="font-medium text-foreground">Encomendas:</strong> o registo e o
+                estado das encomendas associadas à conta;
               </li>
               <li>
-                Outros dados que decidas partilhar connosco de forma voluntária, por exemplo ao
-                descreveres um problema ou uma necessidade.
+                <strong className="font-medium text-foreground">Dados técnicos e de segurança:</strong>{" "}
+                dados de sessão (data de início de cada sessão ativa) e o endereço IP, utilizado
+                exclusivamente para limitar tentativas de início de sessão (ver secção 5).
               </li>
             </ul>
+            <p>
+              Não recolhemos categorias especiais de dados. Pedimos ao Utilizador que não inclua
+              dados sensíveis, nem dados de terceiros, nas mensagens que nos envia.
+            </p>
           </LegalSection>
 
-          <LegalSection title="3. Como utilizamos os dados">
-            <p>Utilizamos os dados recolhidos para, consoante o caso:</p>
+          <LegalSection title="3. Finalidades e fundamentos de licitude">
             <ul className="flex list-disc flex-col gap-2 pl-5">
-              <li>Responder a pedidos de contacto, suporte ou informação;</li>
-              <li>Processar e acompanhar encomendas, quando esta funcionalidade estiver disponível;</li>
-              <li>Gerir a tua conta, caso cries uma;</li>
-              <li>Melhorar o funcionamento, a segurança e a experiência de utilização do site;</li>
-              <li>Cumprir obrigações legais a que estejamos sujeitos.</li>
+              <li>
+                <strong className="font-medium text-foreground">
+                  Criar e gerir a conta do Utilizador e disponibilizar a área de cliente:
+                </strong>{" "}
+                execução do contrato ou de diligências pré-contratuais a pedido do Utilizador
+                (artigo 6.º, n.º 1, alínea b), do RGPD);
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">
+                  Responder a pedidos de suporte e de contacto:
+                </strong>{" "}
+                execução de diligências a pedido do Utilizador e interesse legítimo em prestar um
+                serviço adequado (alíneas b) e f));
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">
+                  Processar e acompanhar encomendas, quando disponível:
+                </strong>{" "}
+                execução do contrato (alínea b));
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">
+                  Garantir a segurança do website e das contas:
+                </strong>{" "}
+                interesse legítimo em prevenir abusos e acessos não autorizados (alínea f));
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">
+                  Cumprir obrigações legais, nomeadamente fiscais e de faturação:
+                </strong>{" "}
+                cumprimento de obrigação jurídica (alínea c)).
+              </li>
             </ul>
             <p>
-              Não utilizamos os teus dados para fins diferentes dos indicados nesta política sem
-              te informar previamente.
+              Não utilizamos os dados pessoais para decisões exclusivamente automatizadas com
+              efeitos jurídicos para o Utilizador, nem para fins de marketing sem o seu
+              consentimento prévio.
             </p>
           </LegalSection>
 
-          <LegalSection title="4. Cookies">
+          <LegalSection title="4. Cookies e armazenamento no dispositivo">
             <p>
-              Cookies são pequenos ficheiros guardados no teu dispositivo que ajudam um site a
-              funcionar corretamente e a lembrar-se de certas preferências.
-            </p>
-            <p>
-              Atualmente, este site utiliza apenas cookies técnicos, necessários ao seu
-              funcionamento básico. Não utilizamos, neste momento, cookies de análise ou de
-              marketing. Caso isso venha a mudar, esta política será atualizada e, sempre que a lei
-              o exigir, pedimos o teu consentimento antes de os ativar.
-            </p>
-            <p>
-              Podes gerir ou desativar cookies nas definições do teu navegador, embora isso possa
-              afetar o funcionamento de algumas partes do site.
-            </p>
-          </LegalSection>
-
-          <LegalSection title="5. Partilha e armazenamento de dados">
-            <p>
-              Não vendemos nem alugamos os teus dados pessoais a terceiros.
-            </p>
-            <p>
-              Podemos recorrer a prestadores de serviços externos que nos ajudam a operar o site e
-              a prestar os nossos serviços — por exemplo, alojamento do site, processamento de
-              encomendas, processamento de pagamentos ou envio de comunicações. Esses prestadores
-              só têm acesso aos dados necessários para prestar o serviço contratado e apenas
-              seguindo as nossas instruções. [LISTA DE PRESTADORES/FORNECEDORES, QUANDO APLICÁVEL]
-            </p>
-            <p>
-              Os teus dados são guardados apenas durante o tempo necessário para cumprir as
-              finalidades descritas nesta política ou para cumprir obrigações legais.
-            </p>
-          </LegalSection>
-
-          <LegalSection title="6. Direitos do utilizador">
-            <p>
-              Ao abrigo do Regulamento Geral sobre a Proteção de Dados (RGPD), tens, entre outros,
-              os seguintes direitos sobre os teus dados pessoais:
+              Este website utiliza apenas cookies estritamente necessários ao seu funcionamento,
+              que não requerem consentimento:
             </p>
             <ul className="flex list-disc flex-col gap-2 pl-5">
-              <li>Direito de acesso aos dados que temos sobre ti;</li>
-              <li>Direito de retificação de dados incorretos ou incompletos;</li>
-              <li>Direito ao apagamento dos teus dados, nos casos previstos na lei;</li>
-              <li>Direito à limitação do tratamento;</li>
-              <li>Direito à portabilidade dos dados;</li>
-              <li>Direito de oposição ao tratamento, em determinadas circunstâncias;</li>
-              <li>Direito a retirar o consentimento a qualquer momento, quando o tratamento se basear em consentimento.</li>
+              <li>
+                um cookie de sessão da área de cliente, criado quando o Utilizador inicia sessão,
+                com a duração máxima de 7 dias ou até o Utilizador terminar a sessão;
+              </li>
+              <li>
+                cookies de sessão de uso interno, exclusivos da área de administração do website.
+              </li>
             </ul>
             <p>
-              Para exercer qualquer um destes direitos, contacta-nos através dos meios indicados na
-              secção “Contacto”. Tens também o direito de apresentar uma reclamação junto da
-              Comissão Nacional de Proteção de Dados (CNPD), a autoridade de controlo em Portugal.
+              Estes cookies são do tipo “HttpOnly” e “Secure”, não são acessíveis por scripts do
+              website e não são utilizados para publicidade ou monitorização. O carrinho de
+              compras é mantido apenas na memória do navegador, não sendo guardado no dispositivo
+              após fechar o separador.
+            </p>
+            <p>
+              Atualmente não utilizamos cookies de análise, de personalização ou de marketing. Se
+              tal vier a ocorrer, esta política será atualizada e o consentimento do Utilizador
+              será solicitado antes da respetiva ativação.
             </p>
           </LegalSection>
 
-          <LegalSection title="7. Segurança dos dados">
+          <LegalSection title="5. Endereço IP e segurança do acesso">
             <p>
-              Procuramos adotar medidas técnicas e organizativas adequadas para proteger os teus
-              dados pessoais contra acesso não autorizado, perda, alteração ou divulgação indevida.
+              Para proteger as contas contra tentativas de adivinhação de palavras-passe,
+              registamos as tentativas de início de sessão falhadas associadas ao endereço IP e ao
+              email indicado. Estes registos são guardados apenas sob a forma de código
+              criptográfico (hash), sem o endereço IP ou o email em texto, deixam de ser
+              considerados após 15 minutos e são eliminados automaticamente pelo sistema.
             </p>
             <p>
-              Nenhum sistema é totalmente seguro. Caso venhamos a ter conhecimento de um incidente
-              que afete os teus dados pessoais, atuaremos em conformidade com as obrigações legais
-              aplicáveis.
+              As ações realizadas pelos administradores do website na área de administração ficam
+              registadas num registo de atividade, para efeitos de segurança e de rastreabilidade.
             </p>
           </LegalSection>
 
-          <LegalSection title="8. Contacto">
+          <LegalSection title="6. Destinatários e subcontratantes">
             <p>
-              Para questões relacionadas com esta Política de Privacidade ou com os teus dados
-              pessoais, podes contactar-nos através de:
+              Não vendemos nem cedemos os dados pessoais a terceiros para fins comerciais. Para
+              operar o website recorremos a prestadores de serviços que atuam como
+              subcontratantes, mediante contratos que impõem o cumprimento do RGPD:
+            </p>
+            <ul className="flex list-disc flex-col gap-2 pl-5">
+              <li>
+                <strong className="font-medium text-foreground">Vercel Inc.:</strong> alojamento
+                do website e armazenamento das imagens dos produtos;
+              </li>
+              <li>
+                <strong className="font-medium text-foreground">Neon, Inc.:</strong> serviço de
+                base de dados onde são guardados os dados da conta, pedidos de suporte e
+                encomendas (região de armazenamento: [REGIÃO DA BASE DE DADOS]);
+              </li>
+              <li>[OUTROS PRESTADORES, QUANDO APLICÁVEL: PAGAMENTOS, ENVIO DE EMAIL, TRANSPORTE]</li>
+            </ul>
+            <p>
+              Podemos ainda comunicar dados a autoridades públicas quando tal seja exigido por lei.
+            </p>
+          </LegalSection>
+
+          <LegalSection title="7. Transferências internacionais">
+            <p>
+              Os prestadores acima identificados são entidades com sede nos Estados Unidos da
+              América, pelo que podem ocorrer transferências de dados pessoais para fora do
+              Espaço Económico Europeu. Essas transferências assentam em mecanismos previstos no
+              RGPD, como decisões de adequação da Comissão Europeia (incluindo o Quadro de
+              Privacidade de Dados UE–EUA) ou cláusulas contratuais-tipo, e em medidas de
+              segurança complementares. [CONFIRMAR O MECANISMO APLICÁVEL A CADA PRESTADOR]
+            </p>
+          </LegalSection>
+
+          <LegalSection title="8. Prazos de conservação">
+            <p>Conservamos os dados apenas pelo período necessário às finalidades indicadas:</p>
+            <ul className="flex list-disc flex-col gap-2 pl-5">
+              <li>Dados de conta e perfil: enquanto a conta se mantiver ativa;</li>
+              <li>Pedidos de suporte: [PRAZO DE CONSERVAÇÃO DOS PEDIDOS DE SUPORTE];</li>
+              <li>
+                Dados de encomendas e de faturação: pelo período exigido pela legislação fiscal e
+                comercial aplicável;
+              </li>
+              <li>Registo de atividade da administração: [PRAZO DE CONSERVAÇÃO DO REGISTO].</li>
+            </ul>
+            <p>
+              Terminado o prazo aplicável, os dados são eliminados ou anonimizados, salvo
+              obrigação legal de conservação.
+            </p>
+          </LegalSection>
+
+          <LegalSection title="9. Direitos do titular dos dados">
+            <p>Nos termos do RGPD, o Utilizador tem o direito de:</p>
+            <ul className="flex list-disc flex-col gap-2 pl-5">
+              <li>aceder aos dados pessoais que lhe digam respeito;</li>
+              <li>solicitar a retificação de dados inexatos ou incompletos;</li>
+              <li>solicitar o apagamento dos dados, nos casos previstos na lei;</li>
+              <li>solicitar a limitação do tratamento;</li>
+              <li>receber os seus dados num formato estruturado (portabilidade);</li>
+              <li>opor-se ao tratamento baseado em interesse legítimo;</li>
+              <li>
+                retirar o consentimento a qualquer momento, sem comprometer a licitude do
+                tratamento anterior, quando o tratamento se baseie no consentimento.
+              </li>
+            </ul>
+            <p>
+              O Utilizador pode corrigir o nome e o telefone diretamente na área de cliente. Para
+              exercer os restantes direitos, incluindo o pedido de apagamento da conta, deve
+              contactar-nos através dos meios indicados na secção “Contacto”. Responderemos no
+              prazo legal de um mês, que pode ser prorrogado nos termos do RGPD.
+            </p>
+            <p>
+              O Utilizador tem ainda o direito de apresentar reclamação junto da Comissão Nacional
+              de Proteção de Dados (CNPD), autoridade de controlo em Portugal (www.cnpd.pt).
+            </p>
+          </LegalSection>
+
+          <LegalSection title="10. Segurança">
+            <p>
+              Adotamos medidas técnicas e organizativas adequadas à proteção dos dados pessoais,
+              incluindo a comunicação cifrada (HTTPS), o armazenamento das palavras-passe apenas
+              sob a forma de hash, sessões com cookies protegidos e limitação de tentativas de
+              início de sessão. Nenhum sistema é totalmente seguro; em caso de violação de dados
+              pessoais, atuaremos de acordo com as obrigações legais aplicáveis, incluindo a
+              notificação à CNPD e aos titulares afetados quando exigido.
+            </p>
+          </LegalSection>
+
+          <LegalSection title="11. Contacto">
+            <p>
+              Para questões relacionadas com esta política ou com os dados pessoais do Utilizador:
             </p>
             <ul className="flex list-disc flex-col gap-2 pl-5">
               <li>Email: [EMAIL DE CONTACTO/PRIVACIDADE]</li>
               <li>Morada: [MORADA DA EMPRESA]</li>
-              <li>Entidade responsável: [NOME DA ENTIDADE/EMPRESA RESPONSÁVEL] [NIF]</li>
+              <li>Entidade responsável: [NOME DA EMPRESA] [NIF]</li>
               <li>Encarregado de Proteção de Dados (quando aplicável): [CONTACTO DO DPO]</li>
             </ul>
           </LegalSection>
 
-          <LegalSection title="9. Alterações a esta política">
+          <LegalSection title="12. Alterações a esta política">
             <p>
-              Podemos atualizar esta Política de Privacidade sempre que necessário, nomeadamente
-              para refletir novas funcionalidades do site ou alterações legais. A data da última
-              atualização está indicada no topo desta página. Recomendamos que a consultes
-              periodicamente.
+              Esta política pode ser atualizada para refletir novas funcionalidades do website ou
+              alterações legais. A data da última atualização consta no topo desta página e, em
+              caso de alterações relevantes, os Utilizadores com conta serão informados por meios
+              adequados.
             </p>
           </LegalSection>
         </div>
