@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { FORBIDDEN_MESSAGE, roleHasPermission } from "@/lib/admin-permissions";
 import { requireAdmin } from "@/lib/backoffice-session-server";
 import { recordActivity } from "@/lib/audit";
 import { updateUserStatus } from "@/lib/backoffice-users";
@@ -16,7 +17,8 @@ export async function setUserStatusAction(
   userId: string,
   status: "active" | "suspended",
 ): Promise<UserStatusResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!roleHasPermission(admin.role, "manage")) return { ok: false, error: FORBIDDEN_MESSAGE };
 
   if (typeof userId !== "string" || (status !== "active" && status !== "suspended")) {
     return { ok: false, error: "Pedido inválido." };

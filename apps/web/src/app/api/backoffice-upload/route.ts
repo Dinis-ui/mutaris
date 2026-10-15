@@ -4,6 +4,7 @@ import { del, put } from "@vercel/blob";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { products } from "@/db/schema";
+import { roleHasPermission } from "@/lib/admin-permissions";
 import { getCurrentAdmin } from "@/lib/backoffice-session-server";
 import {
   PRODUCT_IMAGE_EXTENSION,
@@ -17,6 +18,9 @@ export async function POST(request: Request) {
   const admin = await getCurrentAdmin();
   if (!admin) {
     return NextResponse.json({ error: "Sessão expirada. Entra outra vez." }, { status: 401 });
+  }
+  if (!roleHasPermission(admin.role, "manage")) {
+    return NextResponse.json({ error: "Não tens permissão para esta ação." }, { status: 403 });
   }
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
@@ -65,6 +69,9 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: "Sessão expirada." }, { status: 401 });
+  if (!roleHasPermission(admin.role, "manage")) {
+    return NextResponse.json({ error: "Não tens permissão para esta ação." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => null);
   const url = body?.url;

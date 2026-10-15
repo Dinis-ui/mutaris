@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { and, eq, gt, isNull, lt, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { adminSessions, admins } from "@/db/schema";
+import { roleHasPermission, type AdminPermission, type AdminRole } from "@/lib/admin-permissions";
 import { BACKOFFICE_SESSION_COOKIE, BACKOFFICE_SESSION_MAX_AGE } from "@/lib/backoffice-auth";
 
 /**
@@ -19,6 +20,7 @@ export interface CurrentAdmin {
   id: string;
   email: string;
   name: string;
+  role: AdminRole;
 }
 
 function hashToken(token: string): string {
@@ -73,7 +75,7 @@ export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
 
   try {
     const [row] = await getDb()
-      .select({ id: admins.id, email: admins.email, name: admins.name })
+      .select({ id: admins.id, email: admins.email, name: admins.name, role: admins.role })
       .from(adminSessions)
       .innerJoin(admins, eq(admins.id, adminSessions.adminId))
       .where(
@@ -93,11 +95,14 @@ export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
 
 /**
  * Exige um administrador com sessão válida; senão, redireciona para o
- * login. Deve ser chamada junto dos dados (não depender só do
- * middleware, nem do layout — que não volta a correr em navegação).
+ * login. Com `permission`, exige também que o perfil a inclua; senão,
+ * redireciona para a página "sem permissão". Deve ser chamada junto dos
+ * dados (não depender só do middleware, nem do layout — que não volta a
+ * correr em navegação).
  */
-export async function requireAdmin(): Promise<CurrentAdmin> {
+export async function requireAdmin(permission: AdminPermission = "view"): Promise<CurrentAdmin> {
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/backoffice/login");
+  if (!roleHasPermission(admin.role, permission)) redirect("/backoffice/sem-permissao");
   return admin;
 }

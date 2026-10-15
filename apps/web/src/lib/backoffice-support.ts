@@ -74,7 +74,7 @@ export async function updateTicketStatus(
   id: string,
   status: SupportTicketStatus,
 ): Promise<string | null> {
-  await requireAdmin();
+  await requireAdmin("support");
   if (!isUuid(id)) return null;
 
   const [updated] = await getDb()

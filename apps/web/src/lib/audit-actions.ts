@@ -13,6 +13,7 @@ export type ActivityAction =
   | "admin.enabled"
   | "admin.password_reset"
   | "admin.password_changed"
+  | "admin.role_changed"
   | "user.suspended"
   | "user.reactivated"
   | "ticket.status_changed"
@@ -29,6 +30,7 @@ export const ACTIVITY_ACTIONS: Record<string, { title: string; tone: ActivityTon
   "admin.enabled": { title: "Administrador reativado", tone: "positive" },
   "admin.password_reset": { title: "Palavra-passe de administrador reposta", tone: "attention" },
   "admin.password_changed": { title: "Palavra-passe alterada", tone: "neutral" },
+  "admin.role_changed": { title: "Perfil de administrador alterado", tone: "attention" },
   "user.suspended": { title: "Utilizador suspenso", tone: "attention" },
   "user.reactivated": { title: "Utilizador reativado", tone: "positive" },
   "ticket.status_changed": { title: "Pedido de suporte atualizado", tone: "neutral" },

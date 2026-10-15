@@ -70,7 +70,7 @@ export async function getUserDetail(id: string): Promise<UserDetail | null> {
 
 /** Altera o estado do utilizador. Devolve o nome, ou null se não existir. */
 export async function updateUserStatus(id: string, status: AdminUserStatus): Promise<string | null> {
-  await requireAdmin();
+  await requireAdmin("manage");
   if (!isValidUserId(id)) return null;
 
   const [updated] = await getDb()

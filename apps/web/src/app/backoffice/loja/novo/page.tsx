@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BackofficeNewProductPage() {
-  await requireAdmin();
+  await requireAdmin("manage");
 
   return (
     <>

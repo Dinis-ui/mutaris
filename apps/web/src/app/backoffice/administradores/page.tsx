@@ -5,6 +5,7 @@ import { BackofficePageHeader } from "@/components/backoffice/page-header";
 import { AdminCreateForm } from "@/components/backoffice/admin-create-form";
 import { AdminRowActions } from "@/components/backoffice/admin-row-actions";
 import { listAdmins } from "@/lib/backoffice-admin-accounts";
+import { ADMIN_ROLE_LABELS } from "@/lib/admin-permissions";
 import { formatDate } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default async function BackofficeAdminsPage() {
     <>
       <BackofficePageHeader
         title="Administradores"
-        description="Contas com acesso ao backoffice. Desativar ou repor a palavra-passe termina as sessões dessa conta."
+        description="Contas com acesso ao backoffice e o respetivo perfil de permissões. Desativar ou repor a palavra-passe termina as sessões dessa conta."
       />
       <Card>
         <CardContent className="p-0">
@@ -31,7 +32,9 @@ export default async function BackofficeAdminsPage() {
                 <div className="flex flex-col gap-1">
                   <p className="font-medium text-foreground">
                     {admin.name}
-                    {admin.isSelf ? <span className="text-muted-foreground"> (tu)</span> : null}
+                    {admin.isSelf ? (
+                      <span className="text-muted-foreground"> (tu)</span>
+                    ) : null}
                   </p>
                   <p className="text-sm text-muted-foreground">{admin.email}</p>
                   <p className="text-xs text-muted-foreground">
@@ -40,15 +43,26 @@ export default async function BackofficeAdminsPage() {
                   <div>
                     <Badge variant={admin.disabled ? "outline" : "solid"}>
                       {admin.disabled ? "Desativado" : "Ativo"}
+                    </Badge>{" "}
+                    <Badge variant="outline">
+                      Perfil: {ADMIN_ROLE_LABELS[admin.role]}
                     </Badge>
                   </div>
                 </div>
                 {admin.isSelf ? (
-                  <a href="/backoffice/conta" className="text-sm font-medium underline underline-offset-4">
+                  <a
+                    href="/backoffice/conta"
+                    className="text-sm font-medium underline underline-offset-4"
+                  >
                     Alterar a minha palavra-passe
                   </a>
                 ) : (
-                  <AdminRowActions id={admin.id} name={admin.name} disabled={admin.disabled} />
+                  <AdminRowActions
+                    id={admin.id}
+                    name={admin.name}
+                    disabled={admin.disabled}
+                    role={admin.role}
+                  />
                 )}
               </li>
             ))}

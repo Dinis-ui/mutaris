@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { FORBIDDEN_MESSAGE, roleHasPermission } from "@/lib/admin-permissions";
 import { requireAdmin } from "@/lib/backoffice-session-server";
 import { recordActivity } from "@/lib/audit";
 import { isTicketStatus, updateTicketStatus } from "@/lib/backoffice-support";
@@ -17,7 +18,8 @@ export async function setTicketStatusAction(
   ticketId: string,
   status: string,
 ): Promise<TicketStatusResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  if (!roleHasPermission(admin.role, "support")) return { ok: false, error: FORBIDDEN_MESSAGE };
 
   if (typeof ticketId !== "string" || !isTicketStatus(status)) {
     return { ok: false, error: "Pedido inválido." };

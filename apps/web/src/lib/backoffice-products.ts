@@ -52,7 +52,7 @@ async function slugInUse(slug: string, exceptId?: string): Promise<boolean> {
 }
 
 export async function createProduct(input: ProductInput): Promise<SaveProductResult> {
-  await requireAdmin();
+  await requireAdmin("manage");
   if (await slugInUse(input.slug)) return { ok: false, fieldErrors: SLUG_TAKEN };
 
   await getDb()
@@ -75,7 +75,7 @@ export async function createProduct(input: ProductInput): Promise<SaveProductRes
 }
 
 export async function updateProduct(id: string, input: ProductInput): Promise<SaveProductResult> {
-  await requireAdmin();
+  await requireAdmin("manage");
   if (!isPlausibleId(id)) return { ok: false, message: "Produto não encontrado." };
   if (await slugInUse(input.slug, id)) return { ok: false, fieldErrors: SLUG_TAKEN };
 
@@ -109,7 +109,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Sa
 
 /** Remove o produto. Devolve o nome, ou null se não existir. */
 export async function deleteProduct(id: string): Promise<string | null> {
-  await requireAdmin();
+  await requireAdmin("manage");
   if (!isPlausibleId(id)) return null;
   const [removed] = await getDb()
     .delete(products)
