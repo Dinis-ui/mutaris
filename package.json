@@ -17,7 +17,8 @@
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "npm run test -w @workspace/web"
   },
   "devDependencies": {
     "prettier": "^3.9.8",

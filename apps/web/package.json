@@ -11,12 +11,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node --env-file=.env.local scripts/seed.mjs",
-    "admin:setup": "node --env-file=.env.local scripts/setup-admin.mjs"
+    "admin:setup": "node --env-file=.env.local scripts/setup-admin.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-select": "^2.3.7",
-    "@vercel/blob": "^2.8.1",
     "@workspace/types": "*",
     "@workspace/ui": "*",
     "drizzle-orm": "^0.45.4",
@@ -36,6 +36,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.5",
     "tailwindcss": "^4.3.3",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^3.2.4"
   }
 }
