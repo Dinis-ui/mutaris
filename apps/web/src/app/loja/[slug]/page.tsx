@@ -9,6 +9,7 @@ import { Badge } from "@workspace/ui/components/badge";
 import { SectionHeading } from "@workspace/ui/components/section-heading";
 import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { ProductCard } from "@/components/store/product-card";
+import { siteConfig } from "@/config/site";
 import { formatPrice } from "@/lib/format";
 import { getProductCategoryBySlug } from "@/lib/products";
 import { isBlobImageUrl } from "@/lib/product-image";
@@ -38,7 +39,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return {};
-  return { title: product.name, description: product.description };
+  const image = isBlobImageUrl(product.image) ? [product.image] : undefined;
+  return {
+    title: product.name,
+    description: product.description,
+    alternates: { canonical: `/loja/${product.slug}` },
+    // Produtos de demonstração não devem aparecer nos motores de pesquisa.
+    robots: product.isDemo ? { index: false, follow: true } : undefined,
+    openGraph: { title: product.name, description: product.description, type: "website", images: image },
+  };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -51,8 +60,39 @@ export default async function ProductPage({ params }: ProductPageProps) {
     (item) => item.id !== product.id,
   );
 
+  const jsonLd =
+    product.isDemo
+      ? null
+      : {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.name,
+          description: product.description,
+          ...(isBlobImageUrl(product.image) ? { image: product.image } : {}),
+          url: `${siteConfig.url}/loja/${product.slug}`,
+          ...(product.availability === "sob-consulta"
+            ? {}
+            : {
+                offers: {
+                  "@type": "Offer",
+                  price: product.price.toFixed(2),
+                  priceCurrency: product.currency,
+                  availability:
+                    product.availability === "disponivel"
+                      ? "https://schema.org/InStock"
+                      : "https://schema.org/PreOrder",
+                },
+              }),
+        };
+
   return (
     <>
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        />
+      ) : null}
       <Section>
         <Container className="flex flex-col gap-8">
           <Link
