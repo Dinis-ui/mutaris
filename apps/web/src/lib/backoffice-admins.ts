@@ -35,6 +35,9 @@ export async function findActiveAdminByEmail(email: string): Promise<AdminAccoun
       email: admins.email,
       name: admins.name,
       passwordHash: admins.passwordHash,
+      // Lido aqui só para o login falhar logo (e avisar) se a base de dados
+      // estiver desatualizada, em vez de entrar e voltar ao login.
+      role: admins.role,
       disabledAt: admins.disabledAt,
     })
     .from(admins)
