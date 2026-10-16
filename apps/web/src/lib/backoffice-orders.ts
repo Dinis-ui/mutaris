@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { OrderStatus } from "@workspace/types";
 import { getDb } from "@/db";
-import { orders, users } from "@/db/schema";
+import { orderItems, orders, users } from "@/db/schema";
+import { roleHasPermission } from "@/lib/admin-permissions";
 import { requireAdmin } from "@/lib/backoffice-session-server";
 import { isValidUserId as isUuid } from "@/lib/backoffice-users";
 import type { AdminOrder } from "@/data/backoffice-orders";
@@ -25,7 +26,7 @@ export function isOrderStatus(value: unknown): value is OrderStatus {
 
 /** Encomenda com o cliente, ou null se não existir. */
 export async function getOrderDetail(id: string): Promise<AdminOrder | null> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   if (!isUuid(id)) return null;
 
   const [row] = await getDb()
@@ -39,6 +40,12 @@ export async function getOrderDetail(id: string): Promise<AdminOrder | null> {
       isDemo: orders.isDemo,
       userId: orders.userId,
       customerName: users.name,
+      shippingName: orders.shippingName,
+      shippingPhone: orders.shippingPhone,
+      shippingLine1: orders.shippingLine1,
+      shippingLine2: orders.shippingLine2,
+      shippingPostalCode: orders.shippingPostalCode,
+      shippingCity: orders.shippingCity,
     })
     .from(orders)
     .leftJoin(users, eq(orders.userId, users.id))
@@ -46,6 +53,16 @@ export async function getOrderDetail(id: string): Promise<AdminOrder | null> {
     .limit(1);
 
   if (!row) return null;
+
+  const items = await getDb()
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.orderId, row.id))
+    .orderBy(asc(orderItems.position), asc(orderItems.createdAt));
+
+  const hasAddress = Boolean(row.shippingLine1 && row.shippingPostalCode && row.shippingCity);
+  // A morada é um dado pessoal: só quem trata de encomendas a vê (não o perfil Leitura/Suporte).
+  const canSeeAddress = roleHasPermission(admin.role, "manage");
 
   return {
     id: row.id,
@@ -57,6 +74,25 @@ export async function getOrderDetail(id: string): Promise<AdminOrder | null> {
     total: row.totalCents / 100,
     itemCount: row.itemCount,
     isDemo: row.isDemo,
+    items: items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPriceCents / 100,
+    })),
+    shipping:
+      hasAddress && canSeeAddress
+        ? {
+            name: row.shippingName ?? "",
+            phone: row.shippingPhone ?? "",
+            line1: row.shippingLine1 ?? "",
+            line2: row.shippingLine2 ?? "",
+            postalCode: row.shippingPostalCode ?? "",
+            city: row.shippingCity ?? "",
+            country: "PT",
+          }
+        : null,
+    shippingHidden: hasAddress && !canSeeAddress,
   };
 }
 

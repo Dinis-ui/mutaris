@@ -50,6 +50,13 @@
       "when": 1792084239254,
       "tag": "0006_opposite_firedrake",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792163453039,
+      "tag": "0007_noisy_hawkeye",
+      "breakpoints": true
     }
   ]
 }

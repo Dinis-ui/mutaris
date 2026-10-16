@@ -35,7 +35,7 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 `DATABASE_URL` (Neon), `BLOB_READ_WRITE_TOKEN` (Vercel Blob), opcional `NEXT_PUBLIC_SITE_URL` (domínio público; senão usa `VERCEL_PROJECT_PRODUCTION_URL`). Ver `apps/web/.env.example`.
 
 ## Arquitetura (apps/web/src)
-- `db/schema.ts`: `admins`, `admin_sessions`, `login_failures`, `audit_log`, `users`, `user_sessions`, `products`, `support_tickets`, `orders`.
+- `db/schema.ts`: `admins`, `admin_sessions`, `login_failures`, `audit_log`, `users`, `user_sessions`, `products`, `support_tickets`, `orders`, `order_items`.
 - `app/` páginas públicas (loja, soluções, guias, suporte, sobre, termos, privacidade, carrinho…), `conta/` (área de cliente), `backoffice/` (administração), `api/` (login/logout/sessão de admins e clientes, upload de imagens).
 - `lib/` lógica de servidor e partilhada; `components/`; `config/` (site, navegação); `data/` (conteúdo estático/demo).
 
@@ -47,7 +47,8 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 - Limite de tentativas de login na BD (`lib/backoffice-rate-limit.ts`, tabela `login_failures`): janela 15 min, 5 por IP+identificador e 20 por IP; chaves com âmbito (`admin`, `customer`, `register`, `password`). IP vem de `x-forwarded-for` (de confiança na Vercel).
 - Suspender um cliente bloqueia o acesso de imediato.
 - **Base de dados desatualizada** (código à frente das migrações): `requireAdmin()` distingue "sem sessão" (→ login) de "erro da BD" (→ `/backoffice/indisponivel`, que usa `lib/migration-status.ts` para dizer se há migrações por aplicar); o login do backoffice lê `admins.role` para falhar logo com mensagem clara (503). O erro vai para o log do servidor. **Ordem de deploy:** correr `db:migrate` contra a Neon de produção ANTES de fazer merge de uma PR com migração nova.
-- **Eliminar conta** (`/conta/seguranca`, `deleteAccount` em `lib/customer-account.ts`): pede a palavra-passe (mesmo limite de tentativas que mudar palavra-passe); apaga cliente, sessões e pedidos de suporte; as encomendas ficam com `user_id` nulo (conservação legal); recusa se houver encomendas em curso. Tudo numa transação.
+- **Encomendas** (`orders` + `order_items`, `lib/orders.ts`): `createOrder(userId, {items, shipping})` cria tudo numa transação; o cliente só diz `productId` e quantidade, **preço e nome vêm sempre da BD** (copiados para `order_items`, por isso mudar/apagar o produto não altera encomendas feitas). Só produtos `disponivel`; nasce `awaiting-payment`; total = soma dos artigos (sem portes/IVA, por decidir). Morada copiada para `orders.shipping_*` (`lib/shipping-address.ts`: só Portugal, código postal `0000-000`). A morada é dado pessoal: no backoffice só a vê quem tem a permissão `manage`. Encomendas antigas/demo não têm artigos nem morada e a interface diz isso. **Ainda não há UI de checkout a chamar `createOrder`.**
+- **Eliminar conta** (`/conta/seguranca`, `deleteAccount` em `lib/customer-account.ts`): pede a palavra-passe (mesmo limite de tentativas que mudar palavra-passe); apaga cliente, sessões e pedidos de suporte; as encomendas ficam com `user_id` nulo, **mantendo artigos e morada de entrega** (conservação legal); recusa se houver encomendas em curso. Tudo numa transação.
 - **Perfis de administrador** (`admins.role`, `lib/admin-permissions.ts`): `read` (Leitura: só vê), `support` (Suporte: + pedidos de suporte), `full` (Total: tudo, incl. loja, encomendas, clientes e administradores). Permissões: `view`, `support`, `manage`, `admins`. `requireAdmin("permissão")` redireciona para `/backoffice/sem-permissao`; Server Actions devolvem erro (`FORBIDDEN_MESSAGE`). O perfil é lido a cada pedido (efeito imediato). Contas antigas ficaram `full`; tem de haver sempre um `full` ativo. Ao criar uma função/ação de escrita nova, escolher a permissão certa.
 
 ### Padrão de Server Action
@@ -64,7 +65,7 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 
 **Por fazer / decisões do dono em aberto:**
 1. Dar uma conta a um agente de IA: criar um administrador com perfil **Leitura** em `/backoffice/administradores` (ações que mexem em dinheiro/clientes só com aprovação humana).
-2. Encomendas completas: itens, morada de envio, carrinho/checkout. Bloqueado por: fornecedor de pagamentos, portes, IVA.
+2. Checkout: carrinho → formulário de morada → `createOrder` → pagamento. Bloqueado por: fornecedor de pagamentos, portes, IVA (os itens e a morada das encomendas já existem).
 3. Email (verificação, recuperação de palavra-passe, notificações) — precisa de domínio.
 4. Preencher os marcadores dos textos legais; Livro de Reclamações/RAL.
 5. Imagem de partilha (Open Graph) quando houver marca.
@@ -72,5 +73,5 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 
 ## Limitações conhecidas
 - Registo revela se um email já existe ("Já existe uma conta…"); sem verificação de email nem recuperação de palavra-passe.
-- Encomendas sem itens nem morada; um só imagem por produto; imagens carregadas e não guardadas podem ficar no Blob.
+- Encomendas antigas e de demonstração sem itens nem morada; só se entrega em Portugal; um só imagem por produto; imagens carregadas e não guardadas podem ficar no Blob.
 - Ficheiros de utilizador carregados nunca se editam no sítio: trabalhar sobre cópias.

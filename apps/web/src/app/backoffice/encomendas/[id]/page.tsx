@@ -9,6 +9,7 @@ import { BackofficePageHeader } from "@/components/backoffice/page-header";
 import { OrderStatusPicker } from "@/components/backoffice/order-status-control";
 import { getOrderDetail } from "@/lib/backoffice-orders";
 import { formatDate, formatExactPrice } from "@/lib/format";
+import { formatShippingAddress } from "@/lib/shipping-address";
 
 export const metadata: Metadata = {
   title: "Encomenda",
@@ -22,6 +23,7 @@ export default async function BackofficeOrderDetailPage({
   const { id } = await params;
   const order = await getOrderDetail(id);
   if (!order) notFound();
+  const items = order.items ?? [];
 
   return (
     <>
@@ -80,8 +82,60 @@ export default async function BackofficeOrderDetailPage({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Artigos</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {items.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Esta encomenda não tem artigos registados (é anterior a esta funcionalidade ou é de
+              demonstração): só guarda o número de artigos e o total.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {items.map((item) => (
+                <li key={item.id} className="flex items-start justify-between gap-4 py-3 first:pt-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{item.name}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {item.quantity} × {formatExactPrice(item.unitPrice)}
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium text-foreground">
+                    {formatExactPrice(item.unitPrice * item.quantity)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Morada de entrega</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {order.shipping ? (
+            <address className="whitespace-pre-line text-sm not-italic text-foreground">
+              {formatShippingAddress(order.shipping)}
+              {order.shipping.phone ? `\nTel.: ${order.shipping.phone}` : ""}
+            </address>
+          ) : order.shippingHidden ? (
+            <p className="text-sm text-muted-foreground">
+              A morada é um dado pessoal e só é visível para quem trata de encomendas (perfil Total).
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Esta encomenda não tem morada registada (é anterior a esta funcionalidade ou é de
+              demonstração).
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <p className="text-xs text-muted-foreground">
-        As encomendas ainda não têm artigos nem morada: só guardam o número de artigos e o total.
         Mudar o estado não envia notificações nem mexe em pagamentos.
       </p>
     </>

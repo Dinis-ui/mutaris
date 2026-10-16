@@ -53,7 +53,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
           <CardContent>
             {order.items.length === 0 ? (
               <p className="pb-4 text-sm text-muted-foreground">
-                O detalhe dos artigos desta encomenda ainda não está disponível nesta página.
+                Esta encomenda não tem o detalhe dos artigos registado (encomenda anterior a esta funcionalidade).
               </p>
             ) : null}
             <ul className="divide-y divide-border">
@@ -84,7 +84,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
               <CardTitle>Morada de entrega</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{order.shippingAddress}</p>
+              <p className="whitespace-pre-line text-sm text-muted-foreground">{order.shippingAddress}</p>
             </CardContent>
           </Card>
         ) : null}
