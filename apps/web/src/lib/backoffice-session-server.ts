@@ -63,15 +63,19 @@ export async function destroyAdminSession(token: string): Promise<void> {
   await getDb().delete(adminSessions).where(eq(adminSessions.tokenHash, hashToken(token)));
 }
 
+type AdminLookup =
+  | { status: "ok"; admin: CurrentAdmin }
+  | { status: "none" }
+  | { status: "error" };
+
 /**
- * Administrador com sessão válida (ou null). Valida na base de dados:
- * sessão existente, não expirada e conta não desativada. Em cache durante
- * o mesmo pedido.
+ * Procura o administrador da sessão atual, distinguindo "sem sessão válida"
+ * de "erro ao consultar a base de dados". Em cache durante o mesmo pedido.
  */
-export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
+const lookupAdmin = cache(async (): Promise<AdminLookup> => {
   const store = await cookies();
   const token = store.get(BACKOFFICE_SESSION_COOKIE)?.value;
-  if (!token) return null;
+  if (!token) return { status: "none" };
 
   try {
     const [row] = await getDb()
@@ -86,25 +90,38 @@ export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
         ),
       )
       .limit(1);
-    return row ?? null;
+    return row ? { status: "ok", admin: row } : { status: "none" };
   } catch (error) {
-    // Sem base de dados não há sessão válida. Fica no log do servidor (Vercel →
-    // Logs) para se perceber o motivo, por exemplo uma migração por aplicar.
+    // Fica no log do servidor (Vercel → Logs) para se perceber o motivo, por
+    // exemplo uma migração por aplicar.
     console.error("Não foi possível validar a sessão do backoffice:", error);
-    return null;
+    return { status: "error" };
   }
 });
 
 /**
+ * Administrador com sessão válida (ou null). Valida na base de dados:
+ * sessão existente, não expirada e conta não desativada. Sem base de dados
+ * não há sessão válida (devolve null).
+ */
+export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+  const result = await lookupAdmin();
+  return result.status === "ok" ? result.admin : null;
+}
+
+/**
  * Exige um administrador com sessão válida; senão, redireciona para o
- * login. Com `permission`, exige também que o perfil a inclua; senão,
- * redireciona para a página "sem permissão". Deve ser chamada junto dos
- * dados (não depender só do middleware, nem do layout — que não volta a
- * correr em navegação).
+ * login. Se a base de dados falhar (por exemplo, migração por aplicar),
+ * redireciona para a página "indisponível" — e não para o login, que
+ * ficaria num ciclo sem explicação. Com `permission`, exige também que o
+ * perfil a inclua; senão, redireciona para "sem permissão". Deve ser
+ * chamada junto dos dados (não depender só do middleware, nem do layout —
+ * que não volta a correr em navegação).
  */
 export async function requireAdmin(permission: AdminPermission = "view"): Promise<CurrentAdmin> {
-  const admin = await getCurrentAdmin();
-  if (!admin) redirect("/backoffice/login");
-  if (!roleHasPermission(admin.role, permission)) redirect("/backoffice/sem-permissao");
-  return admin;
+  const result = await lookupAdmin();
+  if (result.status === "error") redirect("/backoffice/indisponivel");
+  if (result.status === "none") redirect("/backoffice/login");
+  if (!roleHasPermission(result.admin.role, permission)) redirect("/backoffice/sem-permissao");
+  return result.admin;
 }

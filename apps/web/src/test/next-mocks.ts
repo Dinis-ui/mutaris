@@ -34,3 +34,12 @@ export const navigationMock = {
 export const cacheMock = {
   revalidatePath: () => {},
 };
+
+/** Pedido JSON simulado para testar rotas da API (`POST(request)`). */
+export function jsonRequest(body: unknown, ip = "10.0.0.1"): Request {
+  return new Request("http://localhost/api/teste", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-forwarded-for": ip },
+    body: typeof body === "string" ? body : JSON.stringify(body),
+  });
+}

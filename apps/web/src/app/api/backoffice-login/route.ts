@@ -3,6 +3,7 @@ import { BACKOFFICE_SESSION_COOKIE, BACKOFFICE_SESSION_MAX_AGE } from "@/lib/bac
 import { authenticateAdmin } from "@/lib/backoffice-admins";
 import { recordActivity } from "@/lib/audit";
 import { createAdminSession } from "@/lib/backoffice-session-server";
+import { getMigrationStatus } from "@/lib/migration-status";
 import { clearFailures, isRateLimited, registerFailure } from "@/lib/backoffice-rate-limit";
 
 export async function POST(request: Request) {
@@ -35,9 +36,16 @@ export async function POST(request: Request) {
     token = await createAdminSession(admin.id);
     await clearFailures(attempt);
     await recordActivity({ action: "admin.login", actor: { id: admin.id, name: admin.name } });
-  } catch {
+  } catch (error) {
+    console.error("Falha no login do backoffice:", error);
+    const migrations = await getMigrationStatus();
     return NextResponse.json(
-      { error: "Não foi possível ligar à base de dados. Tenta novamente." },
+      {
+        error:
+          migrations.state === "pending"
+            ? "A base de dados pode estar desatualizada (migrações por aplicar). Corre npm run db:migrate."
+            : "Não foi possível ligar à base de dados. Tenta novamente.",
+      },
       { status: 503 },
     );
   }
