@@ -46,6 +46,7 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 - **A validação real fica junto dos dados:** `requireAdmin()` em todas as funções/ações do backoffice e `requireUser()` em todas as páginas `/conta`. O `proxy.ts` só verifica a *presença* do cookie.
 - Limite de tentativas de login na BD (`lib/backoffice-rate-limit.ts`, tabela `login_failures`): janela 15 min, 5 por IP+identificador e 20 por IP; chaves com âmbito (`admin`, `customer`, `register`, `password`). IP vem de `x-forwarded-for` (de confiança na Vercel).
 - Suspender um cliente bloqueia o acesso de imediato.
+- **Base de dados desatualizada** (código à frente das migrações): `requireAdmin()` distingue "sem sessão" (→ login) de "erro da BD" (→ `/backoffice/indisponivel`, que usa `lib/migration-status.ts` para dizer se há migrações por aplicar); o login do backoffice lê `admins.role` para falhar logo com mensagem clara (503). O erro vai para o log do servidor. **Ordem de deploy:** correr `db:migrate` contra a Neon de produção ANTES de fazer merge de uma PR com migração nova.
 - **Eliminar conta** (`/conta/seguranca`, `deleteAccount` em `lib/customer-account.ts`): pede a palavra-passe (mesmo limite de tentativas que mudar palavra-passe); apaga cliente, sessões e pedidos de suporte; as encomendas ficam com `user_id` nulo (conservação legal); recusa se houver encomendas em curso. Tudo numa transação.
 - **Perfis de administrador** (`admins.role`, `lib/admin-permissions.ts`): `read` (Leitura: só vê), `support` (Suporte: + pedidos de suporte), `full` (Total: tudo, incl. loja, encomendas, clientes e administradores). Permissões: `view`, `support`, `manage`, `admins`. `requireAdmin("permissão")` redireciona para `/backoffice/sem-permissao`; Server Actions devolvem erro (`FORBIDDEN_MESSAGE`). O perfil é lido a cada pedido (efeito imediato). Contas antigas ficaram `full`; tem de haver sempre um `full` ativo. Ao criar uma função/ação de escrita nova, escolher a permissão certa.
 
@@ -67,7 +68,7 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 3. Email (verificação, recuperação de palavra-passe, notificações) — precisa de domínio.
 4. Preencher os marcadores dos textos legais; Livro de Reclamações/RAL.
 5. Imagem de partilha (Open Graph) quando houver marca.
-6. Mais testes com base de dados (login de administradores/clientes, registo, encomendas). Já cobertos: perfis de permissões, sessões de admin, limite de tentativas, eliminar conta.
+6. Mais testes com base de dados (encomendas e restantes ações do backoffice). Já cobertos: perfis de permissões, login/logout de admins e clientes, registo, sessões, limite de tentativas, eliminar conta, migrações e esquema alinhado com `schema.ts`.
 
 ## Limitações conhecidas
 - Registo revela se um email já existe ("Já existe uma conta…"); sem verificação de email nem recuperação de palavra-passe.
