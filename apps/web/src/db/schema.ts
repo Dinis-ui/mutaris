@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   integer,
   pgEnum,
@@ -166,6 +168,44 @@ export const orders = pgTable("orders", {
   status: orderStatus("status").default("awaiting-payment").notNull(),
   totalCents: integer("total_cents").notNull(),
   itemCount: integer("item_count").default(0).notNull(),
+  /**
+   * Morada de entrega, copiada para a encomenda (se o cliente mudar de morada
+   * depois, a encomenda não muda). Vazia nas encomendas antigas e de demonstração.
+   */
+  shippingName: text("shipping_name"),
+  shippingPhone: text("shipping_phone"),
+  shippingLine1: text("shipping_line1"),
+  shippingLine2: text("shipping_line2"),
+  shippingPostalCode: text("shipping_postal_code"),
+  shippingCity: text("shipping_city"),
+  shippingCountry: text("shipping_country"),
   isDemo: boolean("is_demo").default(false).notNull(),
   createdAt: createdAt(),
 });
+
+/**
+ * Artigos de cada encomenda. Nome e preço são copiados do produto no momento da
+ * compra: mudar ou apagar o produto depois não altera encomendas já feitas.
+ * Apagar a encomenda apaga os artigos; apagar o produto só desliga `productId`.
+ */
+export const orderItems = pgTable(
+  "order_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    productId: text("product_id").references(() => products.id, { onDelete: "set null" }),
+    /** Posição na encomenda (para mostrar sempre pela mesma ordem). */
+    position: integer("position").default(0).notNull(),
+    name: text("name").notNull(),
+    unitPriceCents: integer("unit_price_cents").notNull(),
+    quantity: integer("quantity").notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    index("order_items_order_idx").on(table.orderId),
+    check("order_items_quantity_positive", sql`${table.quantity} > 0`),
+    check("order_items_price_non_negative", sql`${table.unitPriceCents} >= 0`),
+  ],
+);

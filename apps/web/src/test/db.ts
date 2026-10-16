@@ -42,7 +42,7 @@ export async function setupTestDb() {
 /** Apaga os dados (não o esquema) entre testes. */
 export async function resetData() {
   await getDb().execute(
-    sql`truncate table admin_sessions, user_sessions, admins, users, products, support_tickets, orders, login_failures, audit_log restart identity cascade`,
+    sql`truncate table order_items, admin_sessions, user_sessions, admins, users, products, support_tickets, orders, login_failures, audit_log restart identity cascade`,
   );
   cookieJar.clear();
 }

@@ -46,8 +46,8 @@ export function DeleteAccountForm() {
           <li>A tua conta, os teus dados pessoais e as sessões são apagados.</li>
           <li>Os teus pedidos de suporte são apagados.</li>
           <li>
-            Os registos de encomendas que temos de conservar por obrigação legal ficam guardados,
-            sem ligação à tua conta.
+            Os registos de encomendas que temos de conservar por obrigação legal (incluindo os
+            artigos e a morada de entrega) ficam guardados, sem ligação à tua conta.
           </li>
         </ul>
 

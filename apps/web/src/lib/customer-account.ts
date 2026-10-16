@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { and, count, desc, eq, gt, inArray, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, ne } from "drizzle-orm";
 import type { Order, SupportTicket } from "@workspace/types";
 import { getDb } from "@/db";
-import { orders, supportTickets, userSessions, users } from "@/db/schema";
+import { orderItems, orders, supportTickets, userSessions, users } from "@/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/password-hash";
+import { formatShippingAddress } from "@/lib/shipping-address";
 import type { SupportRequestInput } from "@/lib/support";
 
 /**
@@ -43,7 +44,11 @@ export async function updateProfile(
 
 /* --------------------------- Encomendas --------------------------- */
 
-function toOrder(row: typeof orders.$inferSelect): Order {
+function toOrder(
+  row: typeof orders.$inferSelect,
+  items: (typeof orderItems.$inferSelect)[] = [],
+): Order {
+  const hasAddress = row.shippingLine1 && row.shippingPostalCode && row.shippingCity;
   return {
     id: row.id,
     number: row.number,
@@ -51,8 +56,24 @@ function toOrder(row: typeof orders.$inferSelect): Order {
     createdAt: row.createdAt.toISOString(),
     total: row.totalCents / 100,
     currency: "EUR",
-    // As linhas de cada encomenda ainda não existem na base de dados.
-    items: [],
+    // Só o detalhe (`getUserOrder`) traz os artigos; a lista não precisa deles.
+    items: items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: item.unitPriceCents / 100,
+    })),
+    shippingAddress: hasAddress
+      ? formatShippingAddress({
+          name: row.shippingName ?? "",
+          phone: row.shippingPhone ?? "",
+          line1: row.shippingLine1 ?? "",
+          line2: row.shippingLine2 ?? "",
+          postalCode: row.shippingPostalCode ?? "",
+          city: row.shippingCity ?? "",
+          country: "PT",
+        })
+      : undefined,
   };
 }
 
@@ -62,7 +83,7 @@ export async function getUserOrders(userId: string): Promise<Order[]> {
     .from(orders)
     .where(eq(orders.userId, userId))
     .orderBy(desc(orders.createdAt));
-  return rows.map(toOrder);
+  return rows.map((row) => toOrder(row));
 }
 
 /** Encomenda do cliente, ou null (também quando pertence a outra pessoa). */
@@ -73,7 +94,14 @@ export async function getUserOrder(userId: string, id: string): Promise<Order | 
     .from(orders)
     .where(and(eq(orders.id, id), eq(orders.userId, userId)))
     .limit(1);
-  return row ? toOrder(row) : null;
+  if (!row) return null;
+
+  const items = await getDb()
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.orderId, row.id))
+    .orderBy(asc(orderItems.position), asc(orderItems.createdAt));
+  return toOrder(row, items);
 }
 
 /* ----------------------------- Suporte ---------------------------- */

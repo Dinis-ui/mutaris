@@ -1,4 +1,5 @@
 import type { OrderStatus } from "@workspace/types";
+import type { ShippingAddress } from "@/lib/shipping-address";
 
 /**
  * Encomendas mockadas para o backoffice.
@@ -8,6 +9,14 @@ import type { OrderStatus } from "@workspace/types";
  * fictícios (`isDemo: true`). Quando houver encomendas reais, só
  * `lib/backoffice.ts` precisa de mudar.
  */
+export interface AdminOrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  /** Preço unitário em EUR, no momento da compra. */
+  unitPrice: number;
+}
+
 export interface AdminOrder {
   id: string;
   number: string;
@@ -21,6 +30,12 @@ export interface AdminOrder {
   total: number;
   itemCount: number;
   isDemo: boolean;
+  /** Só no detalhe (`getOrderDetail`); vazio nas encomendas antigas e de demonstração. */
+  items?: AdminOrderItem[];
+  /** Só no detalhe, e só para quem tem permissão `manage` (é um dado pessoal). */
+  shipping?: ShippingAddress | null;
+  /** True quando existe morada mas este perfil não a pode ver. */
+  shippingHidden?: boolean;
 }
 
 export const adminOrders: AdminOrder[] = [
