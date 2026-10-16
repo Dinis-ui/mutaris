@@ -14,7 +14,7 @@ Loja online e área de cliente de segurança (casas e pequenos negócios, Portug
 - Next.js 16 (App Router, Turbopack), React 19, TypeScript ~6, Tailwind v4. **`src/proxy.ts` substitui o `middleware.ts`**.
 - Base de dados: PostgreSQL (Neon) com Drizzle ORM + driver `postgres`. Migrações com drizzle-kit.
 - Alojamento: Vercel (`mutaris-3cda.vercel.app`, GitHub `Dinis-ui/mutaris`, root directory `apps/web`). Imagens de produtos no Vercel Blob (`@vercel/blob`).
-- Testes: Vitest (`apps/web/src/**/*.test.ts`, alias `@` → `src`).
+- Testes: Vitest (`apps/web/src/**/*.test.ts`, alias `@` → `src`). Testes com base de dados (`*.db.test.ts`, apoio em `src/test/`) só correm se `TEST_DATABASE_URL` estiver definido; a base é **apagada e recriada** com as migrações reais, por isso o nome tem de conter `test` (senão recusa). Nunca apontar para a Neon de produção. O CI usa um PostgreSQL 16 de serviço.
 - Ainda **sem domínio** e **sem email transacional**.
 
 ## Comandos (a partir da raiz, `C:\mutaris\mutaris`, PowerShell)
@@ -22,7 +22,7 @@ Loja online e área de cliente de segurança (casas e pequenos negócios, Portug
 npm run dev -w @workspace/web
 npm run typecheck -w @workspace/web     # next typegen && tsc --noEmit
 npm run lint -w @workspace/web
-npm test                                # vitest run
+npm test                                # vitest run (testes com BD só correm com TEST_DATABASE_URL)
 npm run db:generate -w @workspace/web   # gerar migração após alterar schema.ts
 npm run db:migrate -w @workspace/web
 npm run db:seed -w @workspace/web
@@ -66,7 +66,7 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 3. Email (verificação, recuperação de palavra-passe, notificações) — precisa de domínio.
 4. Preencher os marcadores dos textos legais; Livro de Reclamações/RAL.
 5. "Eliminar conta" na área de cliente; imagem de partilha (Open Graph) quando houver marca.
-6. Testes com base de dados (ações de login, encomendas, sessões).
+6. Mais testes com base de dados (login de administradores/clientes, registo, encomendas). Já cobertos: perfis de permissões, sessões de admin, limite de tentativas.
 
 ## Limitações conhecidas
 - Registo revela se um email já existe ("Já existe uma conta…"); sem verificação de email nem recuperação de palavra-passe.
