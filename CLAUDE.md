@@ -56,7 +56,8 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 
 ### Outros
 - Páginas públicas usam ISR/estáticas; o estado de sessão no cabeçalho vem de `fetch('/api/conta-sessao')` no cliente.
-- Imagens de produtos: validar tipo pelo conteúdo (`lib/product-image.ts`), só URLs do nosso Blob (`isBlobImageUrl`), máx. 4 MB.
+- Imagens de produtos: validar tipo pelo conteúdo (`lib/product-image.ts`), só URLs do nosso Blob (`isBlobImageUrl`), máx. 4 MB cada e `MAX_PRODUCT_IMAGES` (6) por produto. `products.images` (lista; a primeira é a capa) é a fonte de verdade; `products.image` é uma **coluna em transição** que espelha `images[0]` para o código antigo funcionar entre a migração e o deploy — sai numa migração futura (apagar a coluna e o espelho em `backoffice-products.ts`/`products-server.ts`). Ao guardar/apagar um produto, as imagens removidas são apagadas do Blob.
+- **Imagens não usadas** (`/backoffice/loja/imagens`, `lib/unused-images.ts`, permissão `manage`): procura em dois passos (ver, depois confirmar). Só mexe em `produtos/`, só apaga ficheiros com mais de 24 h e que nenhum produto usa (`images` ou `image`); a lista é recalculada no servidor e só apaga se o número bater com o que o administrador viu. Fica no histórico de atividade.
 - SEO: `app/robots.ts`, `app/sitemap.ts`, JSON-LD em produtos e organização; produtos demo não são indexados.
 - Auditoria: `lib/audit.ts` (`recordActivity`) e `lib/audit-actions.ts` (lista de ações e títulos); histórico em `/backoffice/atividade`.
 
@@ -68,10 +69,10 @@ O `build` precisa de uma base de dados real (as páginas públicas leem produtos
 2. Checkout: carrinho → formulário de morada → `createOrder` → pagamento. Bloqueado por: fornecedor de pagamentos, portes, IVA (os itens e a morada das encomendas já existem).
 3. Email (verificação, recuperação de palavra-passe, notificações) — precisa de domínio.
 4. Preencher os marcadores dos textos legais; Livro de Reclamações/RAL.
-5. Imagem de partilha (Open Graph) quando houver marca.
+5. Imagem de partilha (Open Graph) quando houver marca. Apagar a coluna antiga `products.image` (ver Imagens de produtos) depois de a migração 0008 estar em produção e estável.
 6. Mais testes com base de dados (encomendas e restantes ações do backoffice). Já cobertos: perfis de permissões, login/logout de admins e clientes, registo, sessões, limite de tentativas, eliminar conta, migrações e esquema alinhado com `schema.ts`.
 
 ## Limitações conhecidas
 - Registo revela se um email já existe ("Já existe uma conta…"); sem verificação de email nem recuperação de palavra-passe.
-- Encomendas antigas e de demonstração sem itens nem morada; só se entrega em Portugal; um só imagem por produto; imagens carregadas e não guardadas podem ficar no Blob.
+- Encomendas antigas e de demonstração sem itens nem morada; só se entrega em Portugal; imagens carregadas e não guardadas ficam no Blob até alguém usar a limpeza em Loja → Imagens não usadas.
 - Ficheiros de utilizador carregados nunca se editam no sítio: trabalhar sobre cópias.

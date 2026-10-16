@@ -46,3 +46,25 @@ export function detectImageType(bytes: Uint8Array): ProductImageType | null {
   }
   return null;
 }
+
+/** Imagens por produto (limite técnico; a loja e o formulário usam o mesmo). */
+export const MAX_PRODUCT_IMAGES = 6;
+
+export type ImageListResult = { ok: true; urls: string[] } | { ok: false };
+
+/**
+ * Limpa uma lista de imagens vinda do cliente: só endereços do nosso Blob,
+ * sem repetidos (mantém a primeira ocorrência), no máximo `MAX_PRODUCT_IMAGES`.
+ * Qualquer valor inválido recusa a lista toda.
+ */
+export function normalizeImageList(values: unknown[]): ImageListResult {
+  const urls: string[] = [];
+  for (const value of values) {
+    if (typeof value !== "string") return { ok: false };
+    const url = value.trim();
+    if (!url) continue;
+    if (!isBlobImageUrl(url)) return { ok: false };
+    if (!urls.includes(url)) urls.push(url);
+  }
+  return urls.length > MAX_PRODUCT_IMAGES ? { ok: false } : { ok: true, urls };
+}

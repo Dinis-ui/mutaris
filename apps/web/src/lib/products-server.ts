@@ -11,6 +11,8 @@ import type { Product } from "@workspace/types";
 type ProductRow = typeof products.$inferSelect;
 
 export function toProduct(row: ProductRow): Product {
+  // `images` é a fonte de verdade; `image` cobre linhas criadas pelo código antigo.
+  const images = row.images.length > 0 ? row.images : row.image ? [row.image] : [];
   return {
     id: row.id,
     slug: row.slug,
@@ -19,7 +21,8 @@ export function toProduct(row: ProductRow): Product {
     description: row.description,
     price: row.priceCents / 100,
     currency: "EUR",
-    image: row.image ?? undefined,
+    image: images[0],
+    images,
     availability: row.availability,
     features: row.features,
     solutionIds: row.solutionIds,

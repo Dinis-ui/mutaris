@@ -56,6 +56,7 @@ try {
         priceCents: Math.round(product.price * 100),
         currency: product.currency,
         image: product.image ?? null,
+        images: product.image ? [product.image] : [],
         availability: product.availability,
         features: product.features,
         solutionIds: product.solutionIds,

@@ -1,6 +1,6 @@
 import type { ProductAvailability } from "@workspace/types";
 import { productCategories } from "@/data/product-categories";
-import { isBlobImageUrl } from "@/lib/product-image";
+import { MAX_PRODUCT_IMAGES, normalizeImageList } from "@/lib/product-image";
 
 /**
  * Validação do formulário de produto. Sem dependências de servidor — é
@@ -24,7 +24,7 @@ export type ProductField =
   | "price"
   | "availability"
   | "features"
-  | "image";
+  | "images";
 
 export interface ProductInput {
   name: string;
@@ -34,8 +34,8 @@ export interface ProductInput {
   priceCents: number;
   availability: ProductAvailability;
   features: string[];
-  /** Endereço da imagem no armazenamento Blob, ou null se não tiver. */
-  image: string | null;
+  /** Endereços das imagens no armazenamento Blob (a primeira é a capa); vazio se não tiver. */
+  images: string[];
 }
 
 export type ProductFieldErrors = Partial<Record<ProductField, string>>;
@@ -120,12 +120,12 @@ export function validateProductForm(
     errors.features = "No máximo 20 características, com até 120 caracteres cada.";
   }
 
-  const rawImage = text(formData, "image").trim();
-  if (rawImage && !isBlobImageUrl(rawImage)) {
-    errors.image = "Imagem inválida. Carrega a imagem outra vez.";
+  const imageList = normalizeImageList(formData.getAll("images"));
+  if (!imageList.ok) {
+    errors.images = `Imagens inválidas (máximo ${MAX_PRODUCT_IMAGES}). Carrega-as outra vez.`;
   }
 
-  if (Object.keys(errors).length > 0 || priceCents === null) {
+  if (Object.keys(errors).length > 0 || priceCents === null || !imageList.ok) {
     return { ok: false, fieldErrors: errors };
   }
 
@@ -139,7 +139,7 @@ export function validateProductForm(
       priceCents,
       availability: availability as ProductAvailability,
       features,
-      image: rawImage || null,
+      images: imageList.ok ? imageList.urls : [],
     },
   };
 }

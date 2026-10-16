@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
@@ -9,6 +8,7 @@ import { Badge } from "@workspace/ui/components/badge";
 import { SectionHeading } from "@workspace/ui/components/section-heading";
 import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { ProductCard } from "@/components/store/product-card";
+import { ProductGallery } from "@/components/store/product-gallery";
 import { siteConfig } from "@/config/site";
 import { formatPrice } from "@/lib/format";
 import { getProductCategoryBySlug } from "@/lib/products";
@@ -39,14 +39,19 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return {};
-  const image = isBlobImageUrl(product.image) ? [product.image] : undefined;
+  const image = product.images.filter(isBlobImageUrl);
   return {
     title: product.name,
     description: product.description,
     alternates: { canonical: `/loja/${product.slug}` },
     // Produtos de demonstração não devem aparecer nos motores de pesquisa.
     robots: product.isDemo ? { index: false, follow: true } : undefined,
-    openGraph: { title: product.name, description: product.description, type: "website", images: image },
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      type: "website",
+      images: image.length > 0 ? image : undefined,
+    },
   };
 }
 
@@ -56,6 +61,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) notFound();
 
   const category = getProductCategoryBySlug(product.category);
+  const productImages = product.images.filter(isBlobImageUrl);
   const relatedProducts = (await getProducts({ categorySlug: product.category })).filter(
     (item) => item.id !== product.id,
   );
@@ -68,7 +74,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           "@type": "Product",
           name: product.name,
           description: product.description,
-          ...(isBlobImageUrl(product.image) ? { image: product.image } : {}),
+          ...(productImages.length > 0 ? { image: productImages } : {}),
           url: `${siteConfig.url}/loja/${product.slug}`,
           ...(product.availability === "sob-consulta"
             ? {}
@@ -104,22 +110,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </Link>
 
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-            <div className="relative flex aspect-square w-full max-w-md shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-ink-3">
-              {isBlobImageUrl(product.image) ? (
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  priority
-                  sizes="(min-width: 768px) 28rem, 100vw"
-                  className="object-cover"
-                />
-              ) : (
-                <p className="px-6 text-center text-sm text-muted-foreground">
-                  Sem imagem disponível
-                </p>
-              )}
-            </div>
+            <ProductGallery images={product.images} name={product.name} />
 
             <div className="flex flex-col gap-5">
               <div className="flex flex-wrap items-center gap-2">

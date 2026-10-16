@@ -181,8 +181,10 @@ export interface Product {
   description: string;
   price: number;
   currency: "EUR";
-  /** Por agora fica por definir — ainda não há fotografia real. */
+  /** Imagem de capa (a primeira de `images`). Por definir se o produto não tem imagens. */
   image?: string;
+  /** Todas as imagens do produto, pela ordem em que aparecem (a primeira é a capa). */
+  images: string[];
   availability: ProductAvailability;
   features: string[];
   /** Ids de FeaturedSolution a que este produto pertence, se aplicável. */

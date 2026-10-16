@@ -138,7 +138,13 @@ export const products = pgTable("products", {
   description: text("description").notNull(),
   priceCents: integer("price_cents").notNull(),
   currency: text("currency").default("EUR").notNull(),
+  /**
+   * Em transição: `images` é a lista de imagens (a primeira é a capa) e é a
+   * fonte de verdade. `image` espelha `images[0]` só para o código antigo
+   * continuar a funcionar entre a migração e o deploy; sai numa migração futura.
+   */
   image: text("image"),
+  images: text("images").array().default([]).notNull(),
   availability: productAvailability("availability").default("disponivel").notNull(),
   features: text("features").array().default([]).notNull(),
   solutionIds: text("solution_ids").array().default([]).notNull(),
