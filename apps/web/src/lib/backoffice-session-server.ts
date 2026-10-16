@@ -87,8 +87,10 @@ export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
       )
       .limit(1);
     return row ?? null;
-  } catch {
-    // Sem base de dados não há sessão válida.
+  } catch (error) {
+    // Sem base de dados não há sessão válida. Fica no log do servidor (Vercel →
+    // Logs) para se perceber o motivo, por exemplo uma migração por aplicar.
+    console.error("Não foi possível validar a sessão do backoffice:", error);
     return null;
   }
 });
