@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Monitor } from "lucide-react";
 import { AccountPageHeader } from "@/components/account/page-header";
 import { FormSection } from "@/components/account/form-section";
+import { DeleteAccountForm } from "@/components/account/delete-account-form";
 import { PasswordForm } from "@/components/account/password-form";
 import { TwoFactorCard } from "@/components/account/two-factor-card";
 import { IconBadge } from "@workspace/ui/components/icon-badge";
@@ -56,6 +57,8 @@ export default async function SecurityPage() {
         </p>
         <RevokeSessionsButton disabled={otherSessions === 0} />
       </FormSection>
+
+      <DeleteAccountForm />
     </>
   );
 }

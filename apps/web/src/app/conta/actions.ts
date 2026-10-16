@@ -1,15 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { requireUser, getCurrentSessionHash } from "@/lib/customer-session-server";
 import {
   changePassword,
   createTicket,
+  deleteAccount,
   revokeOtherSessions,
   updateProfile,
 } from "@/lib/customer-account";
-import { NAME_MAX_LENGTH, NAME_MIN_LENGTH, PASSWORD_MAX_LENGTH } from "@/lib/customer-auth";
+import {
+  CUSTOMER_SESSION_COOKIE,
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+} from "@/lib/customer-auth";
 import { clearFailures, isRateLimited, registerFailure } from "@/lib/backoffice-rate-limit";
 import { validatePasswordChange } from "@/lib/password";
 import {
@@ -120,6 +126,58 @@ export async function revokeOtherSessionsAction(): Promise<ActionResult> {
   }
   revalidatePath("/conta/seguranca");
   return { ok: true, message: "As outras sessões foram terminadas." };
+}
+
+/** Elimina a conta do cliente (pede a palavra-passe) e termina a sessão. */
+export async function deleteAccountAction(input: { password: string }): Promise<ActionResult> {
+  const user = await requireUser();
+  const password = text(input?.password, PASSWORD_MAX_LENGTH) ?? "";
+  if (!password) {
+    return {
+      ok: false,
+      error: "Indica a tua palavra-passe para confirmar.",
+      fields: { password: "Indica a tua palavra-passe para confirmar." },
+    };
+  }
+
+  const store = await headers();
+  const ip = store.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  // Mesmo limite de tentativas que a alteração de palavra-passe.
+  const attempt = { ip, email: user.id, scope: "password" as const };
+
+  try {
+    if (await isRateLimited(attempt)) {
+      return { ok: false, error: "Demasiadas tentativas. Tenta novamente dentro de alguns minutos." };
+    }
+
+    const result = await deleteAccount(user.id, password);
+    if (result === "wrong-password") {
+      await registerFailure(attempt);
+      return {
+        ok: false,
+        error: "A palavra-passe está incorreta.",
+        fields: { password: "A palavra-passe está incorreta." },
+      };
+    }
+    if (result === "open-orders") {
+      return {
+        ok: false,
+        error:
+          "Tens encomendas em curso. Só podes eliminar a conta depois de estarem entregues ou canceladas — se precisares, abre um pedido de suporte.",
+      };
+    }
+    if (result === "no-password") return { ok: false, error: GENERIC_ERROR };
+
+    await clearFailures(attempt);
+  } catch {
+    return { ok: false, error: GENERIC_ERROR };
+  }
+
+  (await cookies()).set(CUSTOMER_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  revalidatePath("/backoffice/utilizadores");
+  revalidatePath("/backoffice/suporte");
+  revalidatePath("/backoffice");
+  return { ok: true, message: "A tua conta foi eliminada." };
 }
 
 export async function createSupportTicketAction(input: {

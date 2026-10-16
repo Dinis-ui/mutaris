@@ -8,5 +8,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // Os testes com base de dados partilham a mesma base: um ficheiro de cada vez.
+    fileParallelism: false,
   },
 });
