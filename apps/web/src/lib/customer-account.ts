@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, count, desc, eq, gt, ne } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, ne } from "drizzle-orm";
 import type { Order, SupportTicket } from "@workspace/types";
 import { getDb } from "@/db";
 import { orders, supportTickets, userSessions, users } from "@/db/schema";
@@ -203,4 +203,42 @@ export async function revokeOtherSessions(
     ? and(eq(userSessions.userId, userId), ne(userSessions.tokenHash, keepSessionHash))
     : eq(userSessions.userId, userId);
   await getDb().delete(userSessions).where(condition);
+}
+
+/* ------------------------- Eliminar conta ------------------------- */
+
+/** Encomendas neste estado ainda não terminaram: não se pode eliminar a conta. */
+const OPEN_ORDER_STATUSES = ["awaiting-payment", "processing", "shipped"] as const;
+
+export type DeleteAccountResult = "ok" | "wrong-password" | "no-password" | "open-orders";
+
+/**
+ * Elimina a conta do cliente depois de confirmar a palavra-passe.
+ * - Sessões: apagadas (em cascata).
+ * - Pedidos de suporte: apagados (podem conter dados pessoais na mensagem).
+ * - Encomendas: ficam, sem ligação à conta (`user_id` passa a nulo), porque os
+ *   registos de encomendas/faturação têm de ser conservados por lei.
+ * Tudo numa transação: ou fica tudo feito, ou nada.
+ */
+export async function deleteAccount(userId: string, password: string): Promise<DeleteAccountResult> {
+  const db = getDb();
+  const [row] = await db
+    .select({ passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!row?.passwordHash) return "no-password";
+  if (!(await verifyPassword(password, row.passwordHash))) return "wrong-password";
+
+  return db.transaction(async (tx) => {
+    const [open] = await tx
+      .select({ value: count() })
+      .from(orders)
+      .where(and(eq(orders.userId, userId), inArray(orders.status, [...OPEN_ORDER_STATUSES])));
+    if ((open?.value ?? 0) > 0) return "open-orders" as const;
+
+    await tx.delete(supportTickets).where(eq(supportTickets.userId, userId));
+    await tx.delete(users).where(eq(users.id, userId));
+    return "ok" as const;
+  });
 }

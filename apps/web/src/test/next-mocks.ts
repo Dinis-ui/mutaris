@@ -5,10 +5,15 @@
 export const cookieJar = new Map<string, string>();
 
 export const headersMock = {
+  headers: async () => new Headers({ "x-forwarded-for": "10.0.0.1" }),
   cookies: async () => ({
     get: (name: string) => {
       const value = cookieJar.get(name);
       return value === undefined ? undefined : { name, value };
+    },
+    set: (name: string, value: string, options?: { maxAge?: number }) => {
+      if (options?.maxAge === 0 || value === "") cookieJar.delete(name);
+      else cookieJar.set(name, value);
     },
   }),
 };

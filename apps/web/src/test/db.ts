@@ -7,6 +7,8 @@ import { hashPassword } from "@/lib/password-hash";
 import { createAdminSession } from "@/lib/backoffice-session-server";
 import { cookieJar } from "@/test/next-mocks";
 import { BACKOFFICE_SESSION_COOKIE } from "@/lib/backoffice-auth";
+import { CUSTOMER_SESSION_COOKIE } from "@/lib/customer-auth";
+import { createUserSession } from "@/lib/customer-session-server";
 
 /**
  * Apoio aos testes com base de dados. Só correm se `TEST_DATABASE_URL`
@@ -69,29 +71,46 @@ export async function loginAs(adminId: string) {
   return token;
 }
 
+export const TEST_PASSWORD = "Teste-Teste-123!";
+
+/** Cria uma sessão real de cliente e põe o cookie no pedido simulado. */
+export async function loginAsCustomer(userId: string) {
+  const token = await createUserSession(userId);
+  cookieJar.set(CUSTOMER_SESSION_COOKIE, token);
+  return token;
+}
+
 export async function createTestUser(status: "active" | "suspended" | "pending" = "active") {
   counter += 1;
   const [row] = await getDb()
     .insert(users)
-    .values({ name: `Cliente ${counter}`, email: `cliente${counter}@teste.local`, status })
+    .values({
+      name: `Cliente ${counter}`,
+      email: `cliente${counter}@teste.local`,
+      passwordHash: await hashPassword(TEST_PASSWORD),
+      status,
+    })
     .returning();
   return row!;
 }
 
-export async function createTestTicket() {
+export async function createTestTicket(userId?: string) {
   counter += 1;
   const [row] = await getDb()
     .insert(supportTickets)
-    .values({ reference: `T-${counter}`, subject: "Teste" })
+    .values({ reference: `T-${counter}`, subject: "Teste", userId })
     .returning();
   return row!;
 }
 
-export async function createTestOrder() {
+export async function createTestOrder(
+  userId?: string,
+  status: "awaiting-payment" | "processing" | "shipped" | "delivered" | "cancelled" = "awaiting-payment",
+) {
   counter += 1;
   const [row] = await getDb()
     .insert(orders)
-    .values({ number: `E-${counter}`, totalCents: 1000 })
+    .values({ number: `E-${counter}`, totalCents: 1000, userId, status })
     .returning();
   return row!;
 }
