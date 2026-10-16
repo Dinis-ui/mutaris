@@ -21,6 +21,7 @@ export const products: Product[] = [
     availability: "disponivel",
     features: ["Deteção de abertura", "Alerta na app"],
     solutionIds: ["home"],
+    images: [],
     isDemo: true,
   },
   {
@@ -34,6 +35,7 @@ export const products: Product[] = [
     availability: "disponivel",
     features: ["Deteção de movimento", "Alerta na app"],
     solutionIds: ["home"],
+    images: [],
     isDemo: true,
   },
   {
@@ -47,6 +49,7 @@ export const products: Product[] = [
     availability: "disponivel",
     features: ["Vídeo em direto na app"],
     solutionIds: ["home", "business"],
+    images: [],
     isDemo: true,
   },
   {
@@ -60,6 +63,7 @@ export const products: Product[] = [
     availability: "sob-consulta",
     features: ["Vídeo em direto na app"],
     solutionIds: ["home"],
+    images: [],
     isDemo: true,
   },
   {
@@ -73,6 +77,7 @@ export const products: Product[] = [
     availability: "disponivel",
     features: ["Deteção de fuga de água", "Alerta na app"],
     solutionIds: ["water"],
+    images: [],
     isDemo: true,
   },
   {
@@ -86,6 +91,7 @@ export const products: Product[] = [
     availability: "brevemente",
     features: ["Deteção de fumo"],
     solutionIds: [],
+    images: [],
     isDemo: true,
   },
   {
@@ -99,6 +105,7 @@ export const products: Product[] = [
     availability: "sob-consulta",
     features: ["Controlo de entrada por cartão ou código"],
     solutionIds: ["business"],
+    images: [],
     isDemo: true,
   },
 ];

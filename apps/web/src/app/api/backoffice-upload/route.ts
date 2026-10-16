@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { del, put } from "@vercel/blob";
-import { eq } from "drizzle-orm";
+import { arrayContains, eq, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { products } from "@/db/schema";
 import { roleHasPermission } from "@/lib/admin-permissions";
@@ -83,7 +83,7 @@ export async function DELETE(request: Request) {
     const [inUse] = await getDb()
       .select({ id: products.id })
       .from(products)
-      .where(eq(products.image, url))
+      .where(or(eq(products.image, url), arrayContains(products.images, [url])))
       .limit(1);
     if (!inUse) await del(url);
   } catch {

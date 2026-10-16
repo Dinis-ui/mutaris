@@ -31,6 +31,12 @@ async function deleteStoredImage(url: string | null | undefined): Promise<void> 
   }
 }
 
+/** Todas as imagens de um produto (a lista nova e, por segurança, a coluna antiga). */
+function storedImages(row: { image: string | null; images: string[] } | undefined): string[] {
+  if (!row) return [];
+  return [...new Set([...row.images, ...(row.image ? [row.image] : [])])];
+}
+
 function isPlausibleId(id: string): boolean {
   return id.length > 0 && id.length <= 100;
 }
@@ -66,7 +72,8 @@ export async function createProduct(input: ProductInput): Promise<SaveProductRes
       priceCents: input.priceCents,
       availability: input.availability,
       features: input.features,
-      image: input.image,
+      images: input.images,
+      image: input.images[0] ?? null,
       solutionIds: [],
       isDemo: false,
     });
@@ -80,7 +87,7 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Sa
   if (await slugInUse(input.slug, id)) return { ok: false, fieldErrors: SLUG_TAKEN };
 
   const [previous] = await getDb()
-    .select({ image: products.image })
+    .select({ image: products.image, images: products.images })
     .from(products)
     .where(eq(products.id, id))
     .limit(1);
@@ -95,15 +102,18 @@ export async function updateProduct(id: string, input: ProductInput): Promise<Sa
       priceCents: input.priceCents,
       availability: input.availability,
       features: input.features,
-      image: input.image,
+      images: input.images,
+      image: input.images[0] ?? null,
       updatedAt: new Date(),
     })
     .where(eq(products.id, id))
     .returning({ id: products.id });
 
   if (updated.length === 0) return { ok: false, message: "Produto não encontrado." };
-  // A imagem anterior deixa de ser usada se foi substituída ou removida.
-  if (previous?.image && previous.image !== input.image) await deleteStoredImage(previous.image);
+  // As imagens anteriores que já não estão na lista foram removidas ou substituídas.
+  for (const url of storedImages(previous)) {
+    if (!input.images.includes(url)) await deleteStoredImage(url);
+  }
   return { ok: true, slug: input.slug };
 }
 
@@ -114,7 +124,7 @@ export async function deleteProduct(id: string): Promise<string | null> {
   const [removed] = await getDb()
     .delete(products)
     .where(eq(products.id, id))
-    .returning({ name: products.name, image: products.image });
-  if (removed) await deleteStoredImage(removed.image);
+    .returning({ name: products.name, image: products.image, images: products.images });
+  if (removed) for (const url of storedImages(removed)) await deleteStoredImage(url);
   return removed?.name ?? null;
 }

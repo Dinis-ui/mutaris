@@ -115,7 +115,7 @@ export async function createTestOrder(
   return row!;
 }
 
-export async function createTestProduct() {
+export async function createTestProduct(overrides: Partial<typeof products.$inferInsert> = {}) {
   counter += 1;
   const [row] = await getDb()
     .insert(products)
@@ -126,6 +126,7 @@ export async function createTestProduct() {
       category: "camaras",
       description: "Teste",
       priceCents: 1000,
+      ...overrides,
     })
     .returning();
   return row!;

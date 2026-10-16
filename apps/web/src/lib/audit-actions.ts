@@ -20,7 +20,8 @@ export type ActivityAction =
   | "order.status_changed"
   | "product.created"
   | "product.updated"
-  | "product.deleted";
+  | "product.deleted"
+  | "product.images_cleaned";
 
 export const ACTIVITY_ACTIONS: Record<string, { title: string; tone: ActivityTone }> = {
   "admin.login": { title: "Início de sessão", tone: "neutral" },
@@ -38,4 +39,5 @@ export const ACTIVITY_ACTIONS: Record<string, { title: string; tone: ActivityTon
   "product.created": { title: "Produto criado", tone: "positive" },
   "product.updated": { title: "Produto editado", tone: "neutral" },
   "product.deleted": { title: "Produto removido", tone: "attention" },
+  "product.images_cleaned": { title: "Imagens não usadas apagadas", tone: "attention" },
 };
